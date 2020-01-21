@@ -34,7 +34,7 @@ if __name__ == "__main__":
         myvar.set_value(count)
         mystatic.set_value(10)
         while True:
-            time.sleep(2)
+            time.sleep(1)
             count = myvar.get_value()
             count += 0.1
             myvar.set_value(count)

@@ -1,7 +1,9 @@
 using System;
 using Xunit;
 using opcRESTconnector;
-
+using OpcProxyCore;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 namespace Test
 {
     public class runserver:IDisposable
@@ -19,7 +21,7 @@ namespace Test
         public void Test()
         {
 
-            var url = "http://localhost:8080";
+/*            var url = "http://localhost:8082";
             // Our web server is disposable.
             using (var server = HTTPServerBuilder.CreateWebServer(url))
             {
@@ -28,6 +30,27 @@ namespace Test
 
                 Console.ReadKey(true);
             }
+            */
+            var json = JObject.Parse(@"
+                {
+                    'opcServerURL':'opc.tcp://localhost:4840/freeopcua/server/',
+                    'loggerConfig' :{
+                        'loglevel' :'info'
+                    },
+
+                    'nodesLoader' : {
+                        'targetIdentifier' : 'browseName',
+                        'whiteList':['MyVariable']
+
+                    }
+                }
+            ");
+
+            serviceManager s = new serviceManager(json);
+
+            opcREST rest = new opcREST();
+            s.addConnector(rest);
+            s.run();
 
         }
     }

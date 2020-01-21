@@ -4,6 +4,10 @@ using EmbedIO;
 using EmbedIO.Actions;
 using EmbedIO.WebApi;
 using Swan.Logging;
+using EmbedIO.Authentication;
+using System;
+using OpcProxyCore;
+
 namespace opcRESTconnector {
 
     public class HTTPServerBuilder {
@@ -13,17 +17,25 @@ namespace opcRESTconnector {
         /// </summary>
         //// <param name="url"></param>
         /// <returns></returns>
-        public static WebServer CreateWebServer (string url) {
+        public static WebServer CreateWebServer (RESTconfigs conf, serviceManager manager) {
             
-            var server = new WebServer (
-                o => o
-                    .WithUrlPrefix(url)
-                    .WithMode(HttpListenerMode.EmbedIO)
-                    )
-            .WithLocalSessionManager()
-            //.WithWebApi ("/REST", m => m.WithController<nodeRESTController> ());
-            .WithWebApi ("/REST", m => m.WithController<nodeRESTController> (()=>{return new nodeRESTController("bellissimo!");}));
+            string url = conf.https?"https":"http" + "://" + conf.host + ":" + conf.port + "/" ;
+            if(conf.urlPrefix != "") url = url + conf.urlPrefix;
 
+            var server = new WebServer ( o => o.WithUrlPrefix(url).WithMode(HttpListenerMode.EmbedIO));
+            
+            // BASIC AUTH
+            BasicAuthenticationModule auth = new BasicAuthenticationModule("/","Access to site");
+            auth.WithAccount("",conf.basicAuthPassword);
+            if(conf.enableBasicAuth) server.WithModule(auth);
+
+            // API routes
+            server.WithWebApi ("/api/REST", m => m.WithController<nodeRESTController> (()=>{return new nodeRESTController(manager,conf);}));
+            //server.WithWebApi ("/api/JSON", m => m.WithController<nodeRESTController> (()=>{return new nodeRESTController("bellissimo!");}));
+            
+            // STATIC Files
+            if(conf.enableStaticFiles) server.WithStaticFolder("/",conf.staticFilesPath,false);
+            
             // exception handler
             server.HandleHttpException (customHttpErrorCallback);
 
@@ -33,28 +45,42 @@ namespace opcRESTconnector {
             return server;
         }
 
+
         private static async Task customHttpErrorCallback (IHttpContext ctx, IHttpException ex) {
 
             ctx.Response.StatusCode = ex.StatusCode;
+            if(ex.StatusCode == 401) ctx.Response.Headers.Add("WWW-Authenticate", "Basic realm=Access to site");
 
-            switch (ex.StatusCode) {
-                case 400:
-                    await ctx.SendDataAsync (new httpErrorData () { Error = "Bad Request" });
-                    break;
-                case 403:
-                    await ctx.SendDataAsync (new httpErrorData () { Error = "Forbidden" });
-                    break;
-                case 404:
-                    await ctx.SendDataAsync (new httpErrorData () { Error = "Not Found" });
-                    break;
-                case 405:
-                    await ctx.SendDataAsync (new httpErrorData () { Error = "Not Allowed" });
-                    break;
-                default:
-                    await ctx.SendDataAsync (new httpErrorData () { Error = "Uknown Exception" });
-                    break;
+            foreach (var item in ctx.Route.Keys){
+                Console.WriteLine(item);
+
             }
-
+            if(ctx.Request.RawUrl.Contains("api")){
+                switch (ex.StatusCode) {
+                    case 401:
+                        await ctx.SendDataAsync (new httpErrorData () { Error = "Unauthorized" });
+                        break;
+                    case 400:
+                        await ctx.SendDataAsync (new httpErrorData () { Error = "Bad Request" });
+                        break;
+                    case 403:
+                        await ctx.SendDataAsync (new httpErrorData () { Error = "Forbidden" });
+                        break;
+                    case 404:
+                        await ctx.SendDataAsync (new httpErrorData () { Error = "Not Found" });
+                        break;
+                    case 405:
+                        await ctx.SendDataAsync (new httpErrorData () { Error = "Not Allowed" });
+                        break;
+                    case 500:
+                        await ctx.SendDataAsync (new httpErrorData () { Error = "Internal Server Error" });
+                        break;
+                    default:
+                        await ctx.SendDataAsync (new httpErrorData () { Error = "Uknown Exception" });
+                        break;
+                }
+            }
+            else await ctx.SendStandardHtmlAsync(ex.StatusCode);
         }
     }
 

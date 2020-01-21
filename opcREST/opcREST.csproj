@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="EmbedIO" Version="3.3.3" />
+    <PackageReference Include="opcProxy.core" Version="0.1.9" />
   </ItemGroup>
 
 </Project>

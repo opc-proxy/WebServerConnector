@@ -26,7 +26,7 @@ namespace opcRESTconnector
                 val.Timestamp = variable.timestamp.ToUniversalTime().ToString("o");
                 r.Nodes.Add(val);
             }
-            r.ErrorMessage = ( status == ReadStatusCode.Ok) ? "none" : "Error";
+            r.ErrorMessage = ( status == ReadStatusCode.Ok) ? "none" : "Not Found";
             r.IsError = ( status != ReadStatusCode.Ok);
 
             return r;
@@ -65,22 +65,21 @@ namespace opcRESTconnector
          public async Task<WriteResponse> PostData(string node_name) 
         {
             var data = await HttpContext.GetRequestFormDataAsync();
-            
             // validity check
             if(_conf.enableAPIkey && ( !data.ContainsKey("apiKey") || data.Get("apiKey") != _conf.apyKey ))  
-                throw HttpException.BadRequest();
+                throw HttpException.Forbidden();
 
             if(!data.ContainsKey("value")) 
                 throw HttpException.BadRequest();
-            
+                    
             var value = data.Get("value");
             var status = await _service.writeToOPCserver(node_name, value);
             
             WriteResponse r = new WriteResponse();
             r.IsError = (Opc.Ua.StatusCode.IsBad(status[0]));
-            r.ErrorMessage = (r.IsError) ? "Error" : "none";
+            r.ErrorMessage = (r.IsError) ? "Not Found" : "none";
 
-            if(r.IsError) HttpContext.Response.StatusCode = 400;
+            if(r.IsError) HttpContext.Response.StatusCode = 404;
 
             return r;
         }

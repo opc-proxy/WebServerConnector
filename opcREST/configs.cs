@@ -31,6 +31,8 @@ namespace opcRESTconnector
         public bool enableBasicAuth {get; set;}
         public bool enableStaticFiles {get; set;}
         public bool enableAPIkey {get; set;}
+        public bool enableREST {get; set;}
+        public bool enableJSON {get; set;}
 
         public string apyKey {get; set;}
         public string basicAuthPassword {get; set;}
@@ -44,6 +46,8 @@ namespace opcRESTconnector
             enableAPIkey = false;
             enableStaticFiles = false;
             enableBasicAuth = false;
+            enableREST = true;
+            enableJSON = true;
             host = "localhost";
             port = "8082";
             https = false;

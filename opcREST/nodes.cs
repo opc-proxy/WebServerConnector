@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Swan;
 using Swan.Cryptography;
+using System;
 
 namespace opcRESTconnector  
 {
@@ -9,13 +10,13 @@ namespace opcRESTconnector
     {
         public string Name {get;set;}
         public string Type {get;set;}
-        public string Value {get;set;}
+        public object Value {get;set;}
         public string Timestamp {get;set;}
 
         public NodeValue(){
             Name = "none";
             Type = "none";
-            Value = "none";
+            Value = null;
             Timestamp = "none";
         }
     }
@@ -38,6 +39,28 @@ namespace opcRESTconnector
         public WriteResponse(){
             ErrorMessage = "none";
             IsError = false;
+        }
+    }
+
+    public class ReadRequest{
+        public List<String> names {get;set;}
+        public string apiKey {get;set;}
+
+        public ReadRequest(){
+            names = new List<string>{};
+            apiKey = "";
+        }
+    }
+
+    public class WriteRequest{
+        public string name {get;set;}
+        public string apiKey {get;set;}
+        public object value {get; set;}
+
+        public WriteRequest(){
+            name = "";
+            apiKey = "";
+            value = null;
         }
     }
 

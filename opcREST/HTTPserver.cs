@@ -30,8 +30,10 @@ namespace opcRESTconnector {
             if(conf.enableBasicAuth) server.WithModule(auth);
 
             // API routes
-            server.WithWebApi ("/api/REST", m => m.WithController<nodeRESTController> (()=>{return new nodeRESTController(manager,conf);}));
-            //server.WithWebApi ("/api/JSON", m => m.WithController<nodeRESTController> (()=>{return new nodeRESTController("bellissimo!");}));
+            if(conf.enableREST) 
+                server.WithWebApi ("/api/REST", m => m.WithController<nodeRESTController> (()=>{return new nodeRESTController(manager,conf);}));
+            if(conf.enableJSON)
+                server.WithWebApi ("/api/JSON", m => m.WithController<nodeJSONController> (()=>{return new nodeJSONController(manager,conf);}));
             
             // STATIC Files
             if(conf.enableStaticFiles) server.WithStaticFolder("/",conf.staticFilesPath,false);

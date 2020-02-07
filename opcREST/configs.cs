@@ -1,5 +1,6 @@
-
-
+using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.Linq;
 namespace opcRESTconnector
 {
     /// <summary>
@@ -35,13 +36,13 @@ namespace opcRESTconnector
         public bool enableJSON {get; set;}
 
         public string apyKey {get; set;}
-        public string basicAuthPassword {get; set;}
+        public List<List<string>> basicAuth {get; set;}
         public string staticFilesPath {get; set;}
 
 
         public RESTconfigs(){
             apyKey = "";
-            basicAuthPassword = "";
+            basicAuth = new List<List<string>>(){};
             staticFilesPath = "./public/";
             enableAPIkey = false;
             enableStaticFiles = false;

@@ -5,8 +5,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="EmbedIO" Version="3.3.3" />
+	  <!--    <PackageReference Include="EmbedIo" Version="3.3.1" />-->
     <PackageReference Include="opcProxy.core" Version="0.1.9" />
+    <PackageReference Include="Unosquare.Swan.Lite" Version="2.6.1" />
+  </ItemGroup>
+
+<ItemGroup>
+	<ProjectReference Include="..\..\embedio\src\EmbedIO\EmbedIO.csproj" />
+  
   </ItemGroup>
 
 </Project>

@@ -10,7 +10,6 @@ using System;
 using OpcProxyCore;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-//using Unosquare.Tubular;
 
 namespace opcRESTconnector
 {
@@ -46,8 +45,14 @@ namespace opcRESTconnector
 
 
 
-        [Route(HttpVerbs.Get, "/{node_name}")]
+        [Route(HttpVerb.Get, "/{node_name}")]
         public  ReadResponse GetNode(string node_name){
+           
+            // Check if Authorized
+            var role = (AuthRoles)(HttpContext.Items["Role"] ?? AuthRoles.Undefined);
+            if(_conf.enableBasicAuth && role == AuthRoles.Undefined) 
+                throw HttpException.Forbidden();
+            
            try{
                 List<string> names = new List<string>{ node_name };
                 ReadStatusCode status;
@@ -62,9 +67,14 @@ namespace opcRESTconnector
         }
 
         
-        [Route(HttpVerbs.Post, "/{node_name}")]
+        [Route(HttpVerb.Post, "/{node_name}")]
          public async Task<WriteResponse> PostData(string node_name) 
         {
+              // Check if Authorized
+            var role = (AuthRoles)(HttpContext.Items["Role"] ?? AuthRoles.Undefined);
+            if(_conf.enableBasicAuth && role != AuthRoles.Writer && role != AuthRoles.Admin ) 
+                throw HttpException.Forbidden();
+            
             var data = await HttpContext.GetRequestFormDataAsync();
             // validity check
             if(_conf.enableAPIkey && ( !data.ContainsKey("apiKey") || data.Get("apiKey") != _conf.apyKey ))  
@@ -88,6 +98,8 @@ namespace opcRESTconnector
 
     }
 
+    // FIXME refactor these two controllers to use common functions, they do mostly same stuff
+    // will be more readable
     public sealed class nodeJSONController : WebApiController
     {
         serviceManager _service;
@@ -99,8 +111,13 @@ namespace opcRESTconnector
 
 
 
-        [Route(HttpVerbs.Post, "/read")]
+        [Route(HttpVerb.Post, "/read")]
         public async Task<ReadResponse> GetNodes(){
+            
+            // Check if Authorized
+            var role = (AuthRoles)(HttpContext.Items["Role"] ?? AuthRoles.Undefined);
+            if(_conf.enableBasicAuth && role == AuthRoles.Undefined) 
+                throw HttpException.Forbidden();
             
             if( !HttpContext.Request.ContentType.Contains("application/json")) {
                 throw HttpException.BadRequest();
@@ -131,10 +148,15 @@ namespace opcRESTconnector
         }
 
         
-        [Route(HttpVerbs.Post, "/write")]
+        [Route(HttpVerb.Post, "/write")]
          public async Task<WriteResponse> PostData() 
         {
 
+            // Check if Authorized
+            var role = (AuthRoles)(HttpContext.Items["Role"] ?? AuthRoles.Undefined);
+            if(_conf.enableBasicAuth && role != AuthRoles.Writer && role != AuthRoles.Admin ) 
+                throw HttpException.Forbidden();
+            
             if( !HttpContext.Request.ContentType.Contains("application/json")) 
                 throw HttpException.BadRequest();
 
@@ -146,7 +168,7 @@ namespace opcRESTconnector
             catch(Exception){
                 throw HttpException.BadRequest();
             }
-            
+
             // validity check
             if(_conf.enableAPIkey &&  data.apiKey != _conf.apyKey )  
                 throw HttpException.Forbidden();

@@ -12,6 +12,7 @@ namespace opcRESTconnector {
 
     public class HTTPServerBuilder {
 
+
         /// <summary>
         /// 
         /// </summary>
@@ -23,11 +24,30 @@ namespace opcRESTconnector {
             if(conf.urlPrefix != "") url = url + conf.urlPrefix;
 
             var server = new WebServer ( o => o.WithUrlPrefix(url).WithMode(HttpListenerMode.EmbedIO));
+
+            bool passed = false;
             
-            // BASIC AUTH
-            BasicAuthenticationModule auth = new BasicAuthenticationModule("/","Access to site");
-            auth.WithAccount("",conf.basicAuthPassword);
-            if(conf.enableBasicAuth) server.WithModule(auth);
+            // BASIC AUTHENTICATION
+            CustomBaseAthentication authentication = new CustomBaseAthentication(conf);
+            if(conf.enableBasicAuth) server.WithModule(authentication);
+            
+            // AUTHORIZZATION
+            AuthorizationModule authorizzation = new AuthorizationModule(conf);
+            server.WithModule(authorizzation);
+            server.WithLocalSessionManager();
+            if(conf.enableBasicAuth) server.WithAction("/logout",HttpVerb.Any, async (ctx)=>{ 
+                if(passed) {
+                    passed = false;
+                    ctx.Redirect("/");
+                }
+                else {
+                    passed = true;
+                    ctx.Response.StatusCode = 401;
+                    ctx.Response.Headers.Add("WWW-Authenticate", "Basic realm=Access to site");
+                    await ctx.SendStringAsync("<script>setTimeout(()=>{window.location = '/'},3000)</script>","text/html",Encoding.UTF8);
+                }
+
+            });
 
             // API routes
             if(conf.enableREST) 
@@ -84,6 +104,7 @@ namespace opcRESTconnector {
             }
             else await ctx.SendStandardHtmlAsync(ex.StatusCode);
         }
+        
     }
 
     /// <summary>

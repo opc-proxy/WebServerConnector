@@ -4,6 +4,8 @@ using Newtonsoft.Json.Linq;
 using OpcProxyClient;
 using OpcProxyCore;
 using EmbedIO;
+using System;
+using NLog;
 
 namespace opcRESTconnector
 {
@@ -13,6 +15,11 @@ namespace opcRESTconnector
         public serviceManager manager;
 
         public WebServer server;
+        public static NLog.Logger logger = null;
+
+        public opcREST(){
+            logger = LogManager.GetLogger(this.GetType().Name);
+        }
 
         public void OnNotification(object emitter, MonItemNotificationArgs items)
         {
@@ -26,10 +33,17 @@ namespace opcRESTconnector
 
         public void init(JObject config, CancellationTokenSource cts)
         {
-            _conf = config.ToObject<RESTconfigsWrapper>().RESTapi;
-            server = HTTPServerBuilder.CreateWebServer(_conf,manager);
-            server.RunAsync(cts.Token);
+            try{
+                _conf = config.ToObject<RESTconfigsWrapper>().RESTapi;
+                server = HTTPServerBuilder.CreateWebServer(_conf,manager);
+                server.RunAsync(cts.Token);
+            }
+            catch(Exception ex){
+                logger.Error(ex.Message);
+                cts.Cancel();
+            }
         }
+
 
         public void clean()
         {

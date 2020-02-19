@@ -30,23 +30,25 @@ namespace opcRESTconnector
         /// </summary>
         public string urlPrefix {get; set;}
         public bool enableBasicAuth {get; set;}
+        public bool enableCookieAuth {get; set;}
         public bool enableStaticFiles {get; set;}
         public bool enableAPIkey {get; set;}
         public bool enableREST {get; set;}
         public bool enableJSON {get; set;}
 
         public string apyKey {get; set;}
-        public List<List<string>> basicAuth {get; set;}
+        public List<List<string>> userAuth {get; set;}
         public string staticFilesPath {get; set;}
 
 
         public RESTconfigs(){
             apyKey = "";
-            basicAuth = new List<List<string>>(){};
+            userAuth = new List<List<string>>(){};
             staticFilesPath = "./public/";
             enableAPIkey = false;
             enableStaticFiles = false;
             enableBasicAuth = false;
+            enableCookieAuth = false;
             enableREST = true;
             enableJSON = true;
             host = "localhost";

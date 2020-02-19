@@ -7,6 +7,7 @@ using Swan.Logging;
 using EmbedIO.Authentication;
 using System;
 using OpcProxyCore;
+using opcRESTconnector.Session;
 
 namespace opcRESTconnector {
 
@@ -20,13 +21,15 @@ namespace opcRESTconnector {
         /// <returns></returns>
         public static WebServer CreateWebServer (RESTconfigs conf, serviceManager manager) {
             
+            //SecureSessionManager soap = new SecureSessionManager();
+
             string url = conf.https?"https":"http" + "://" + conf.host + ":" + conf.port + "/" ;
             if(conf.urlPrefix != "") url = url + conf.urlPrefix;
 
             var server = new WebServer ( o => o.WithUrlPrefix(url).WithMode(HttpListenerMode.EmbedIO));
 
-            bool passed = false;
-            
+            server.WithWebApi("/admin", m => m.WithController<logonLogoffController>(()=>{return new logonLogoffController(conf, url);}));
+
             // BASIC AUTHENTICATION
             CustomBaseAthentication authentication = new CustomBaseAthentication(conf);
             if(conf.enableBasicAuth) server.WithModule(authentication);
@@ -34,8 +37,8 @@ namespace opcRESTconnector {
             // AUTHORIZZATION
             AuthorizationModule authorizzation = new AuthorizationModule(conf);
             server.WithModule(authorizzation);
-            server.WithLocalSessionManager();
-            if(conf.enableBasicAuth) server.WithAction("/logout",HttpVerb.Any, async (ctx)=>{ 
+
+            /*if(conf.enableBasicAuth) server.WithAction("/logout",HttpVerb.Any, async (ctx)=>{ 
                 if(passed) {
                     passed = false;
                     ctx.Redirect("/");
@@ -47,7 +50,7 @@ namespace opcRESTconnector {
                     await ctx.SendStringAsync("<script>setTimeout(()=>{window.location = '/'},3000)</script>","text/html",Encoding.UTF8);
                 }
 
-            });
+            });*/
 
             // API routes
             if(conf.enableREST) 

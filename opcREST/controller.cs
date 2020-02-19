@@ -10,6 +10,7 @@ using System;
 using OpcProxyCore;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Text;
 
 namespace opcRESTconnector
 {
@@ -33,6 +34,104 @@ namespace opcRESTconnector
         }
     }
 
+    public sealed class logonLogoffController : WebApiController{
+        string _url;
+        AntiCSRF.AntiCSRF csrf_gen;
+        RESTconfigs _conf;
+        Dictionary<string, string> users;
+
+        public logonLogoffController(RESTconfigs conf, string url){
+            _conf = conf;
+            _url = url;
+
+            var csrf_conf = new AntiCSRF.Config.AntiCSRFConfig(){ expiryInSeconds = 180 };
+            csrf_gen = new AntiCSRF.AntiCSRF(csrf_conf);
+            users = new Dictionary<string, string>();
+            if(conf.enableCookieAuth) loadUsers();
+
+        }
+
+        public bool validate(string user, string password){
+            if(!users.ContainsKey(user)) return false;
+            string actualPW = "";
+            users.TryGetValue(user, out actualPW);
+            if(password != actualPW) return false;
+            return true;
+        }
+
+        public void loadUsers(){
+            foreach(var user_item in _conf.userAuth)
+            {
+                if(user_item.Count == 3){
+                    users.Add(user_item[0],user_item[1]);
+                }
+                else{
+                    throw new Exception("Malformed user item: " + user_item[0]);
+                }
+            }
+        }
+
+        [Route(HttpVerb.Get, "/login")]
+        public async Task logon(){
+            var token = csrf_gen.GenerateToken("salt","whatever");
+            Console.WriteLine(token);
+            var cookie = new System.Net.Cookie("_csrf",token + "; SameSite=Strict");
+            cookie.HttpOnly = true;
+            cookie.Expires = DateTime.Now.AddMinutes(3) ;
+            HttpContext.Response.SetCookie(cookie);
+            await HttpContext.SendStringAsync(HTMLtemplates.loginPage(token,_url +"admin/login"),"text/html",Encoding.UTF8);
+        }
+        
+        
+        [Route(HttpVerb.Post, "/login")]
+        public async Task check_logon(){
+
+            var data = await HttpContext.GetRequestFormDataAsync();
+            System.Net.Cookie req_cookie = null;
+            foreach (var c in HttpContext.Request.Cookies)
+            {
+                if(c.Name == "_csrf") {
+                    req_cookie = c;
+                    Console.WriteLine("found cookie "+ c.Value);
+                }
+            } 
+            System.Net.Cookie resp_cookie = new System.Net.Cookie();
+
+            if(req_cookie == null) {
+                // probaly the cookie has expired
+                // set some session cookie for error display
+                HttpContext.Redirect("/admin/login/");
+                return;
+            }
+            
+            if(!csrf_gen.ValidateToken(req_cookie.Value,"whatever","salt")) throw HttpException.Forbidden();
+
+            if( !data.ContainsKey("_csrf") ) throw HttpException.Forbidden();
+            
+            if( req_cookie.Value != data.Get("_csrf") ) throw HttpException.Forbidden();
+
+            string user = data.Get("user") ;
+            string pw = data.Get("pw") ;
+            
+            Console.WriteLine("Very good " + user + " " + pw);
+            
+            // validate password
+            if( !validate(user,pw) ) {        
+                // set some session cookie for error display
+                HttpContext.Redirect("/admin/login/");
+                return;
+            }
+
+            resp_cookie.Name = "JWTtoken";
+            resp_cookie.Value = "token" + "; SameSite=Strict";
+            resp_cookie.HttpOnly = true;
+            resp_cookie.Path = "/";
+            HttpContext.Response.SetCookie(resp_cookie);
+            Console.WriteLine("pass");
+            HttpContext.Redirect("/");
+        }
+    }
+    
 
     public sealed class nodeRESTController : WebApiController
     {

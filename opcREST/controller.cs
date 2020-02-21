@@ -11,6 +11,7 @@ using OpcProxyCore;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Text;
+using opcRESTconnector.Session;
 
 namespace opcRESTconnector
 {
@@ -40,7 +41,9 @@ namespace opcRESTconnector
         RESTconfigs _conf;
         Dictionary<string, string> users;
 
-        public logonLogoffController(RESTconfigs conf, string url){
+        SecureSessionManager session_manager;        
+
+        public logonLogoffController(RESTconfigs conf, string url, SecureSessionManager ssm){
             _conf = conf;
             _url = url;
 
@@ -49,6 +52,7 @@ namespace opcRESTconnector
             users = new Dictionary<string, string>();
             if(conf.enableCookieAuth) loadUsers();
 
+            session_manager = ssm;
         }
 
         public bool validate(string user, string password){
@@ -71,8 +75,9 @@ namespace opcRESTconnector
             }
         }
 
-        [Route(HttpVerb.Get, "/login")]
+        [Route(HttpVerb.Get,"/")]
         public async Task logon(){
+            
             var token = csrf_gen.GenerateToken("salt","whatever");
             Console.WriteLine(token);
             var cookie = new System.Net.Cookie("_csrf",token + "; SameSite=Strict");
@@ -83,7 +88,7 @@ namespace opcRESTconnector
         }
         
         
-        [Route(HttpVerb.Post, "/login")]
+        [Route(HttpVerb.Post, "/")]
         public async Task check_logon(){
 
             var data = await HttpContext.GetRequestFormDataAsync();
@@ -105,10 +110,13 @@ namespace opcRESTconnector
             }
             
             if(!csrf_gen.ValidateToken(req_cookie.Value,"whatever","salt")) throw HttpException.Forbidden();
+            Console.WriteLine("CSRF token Valid");
 
             if( !data.ContainsKey("_csrf") ) throw HttpException.Forbidden();
+            Console.WriteLine("CSRF token present in data");
             
             if( req_cookie.Value != data.Get("_csrf") ) throw HttpException.Forbidden();
+            Console.WriteLine("CSRF token and Cookie are same");
 
             string user = data.Get("user") ;
             string pw = data.Get("pw") ;
@@ -122,14 +130,26 @@ namespace opcRESTconnector
                 return;
             }
 
-            resp_cookie.Name = "JWTtoken";
-            resp_cookie.Value = "token" + "; SameSite=Strict";
-            resp_cookie.HttpOnly = true;
-            resp_cookie.Path = "/";
-            HttpContext.Response.SetCookie(resp_cookie);
-            Console.WriteLine("pass");
+            // delete the current session if any
+            session_manager.Delete(HttpContext);
+
+            var current_session = session_manager.RegisterSession(HttpContext);
+            Console.WriteLine("pass0");
+            current_session["user"] = user;
+            Console.WriteLine("pass1");
             HttpContext.Redirect("/");
         }
+
+        [Route(HttpVerb.Any, "/{data}")]
+         public Task forbid(){
+            if( string.IsNullOrEmpty(HttpContext.Session.Id) ){
+                HttpContext.Response.StatusCode = 403;
+                HttpContext.SetHandled();
+                return HttpContext.SendStringAsync(HTMLtemplates.forbidden(),"text/html",Encoding.UTF8);
+            }
+            else throw HttpException.NotFound();
+         }
+
     }
     
 

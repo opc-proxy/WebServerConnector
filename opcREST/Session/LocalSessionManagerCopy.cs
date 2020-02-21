@@ -202,7 +202,7 @@ namespace opcRESTconnector.Session
         }
 
         /// <inheritdoc />
-        public ISession Create(IHttpContext context)
+        public virtual ISession Create(IHttpContext context)
         {
             var id = GetSessionId(context);
 
@@ -227,7 +227,7 @@ namespace opcRESTconnector.Session
         }
 
         /// <inheritdoc />
-        public void Delete(IHttpContext context)
+        public virtual void Delete(IHttpContext context)
         {
             var id = GetSessionId(context);
 
@@ -305,7 +305,7 @@ namespace opcRESTconnector.Session
             }
         }
 
-        public string GetSessionId(IHttpContext context) => context.Request.Cookies.FirstOrDefault(IsSessionCookie)?.Value.Trim() ?? string.Empty;
+        public virtual string GetSessionId(IHttpContext context) => context.Request.Cookies.FirstOrDefault(IsSessionCookie)?.Value.Trim() ?? string.Empty;
     }
 
 }

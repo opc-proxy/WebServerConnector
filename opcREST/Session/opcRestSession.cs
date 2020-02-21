@@ -18,6 +18,7 @@ namespace opcRESTconnector.Session {
             private readonly Dictionary<string, object> _data = new Dictionary<string, object>(Session.KeyComparer);
 
             private int _usageCount;
+            public bool isAnonymous;
 
             public SimpleSession(string id, TimeSpan duration)
             {
@@ -25,6 +26,15 @@ namespace opcRESTconnector.Session {
                 Duration = duration;
                 LastActivity = DateTime.UtcNow;
                 _usageCount = 1;
+                isAnonymous = false;
+            }
+
+            public SimpleSession(){
+                Id = "";
+                Duration = TimeSpan.Zero;
+                LastActivity = DateTime.UtcNow;
+                _usageCount = 1;
+                isAnonymous = true;
             }
 
             public string Id { get; }

@@ -21,36 +21,32 @@ namespace opcRESTconnector {
         /// <returns></returns>
         public static WebServer CreateWebServer (RESTconfigs conf, serviceManager manager) {
             
-            //SecureSessionManager soap = new SecureSessionManager();
 
-            string url = conf.https?"https":"http" + "://" + conf.host + ":" + conf.port + "/" ;
-            if(conf.urlPrefix != "") url = url + conf.urlPrefix;
-
+            string url = buildHostURL(conf);
             var server = new WebServer ( o => o.WithUrlPrefix(url).WithMode(HttpListenerMode.EmbedIO));
 
-            server.WithWebApi("/admin", m => m.WithController<logonLogoffController>(()=>{return new logonLogoffController(conf, url);}));
+            server.WithAction("/favicon.ico",HttpVerb.Get,(ctx)=>{
+                ctx.Redirect("https://avatars0.githubusercontent.com/u/52571081?s=200&v=4",308);
+                return Task.CompletedTask;
+            });
 
-            // BASIC AUTHENTICATION
-            CustomBaseAthentication authentication = new CustomBaseAthentication(conf);
-            if(conf.enableBasicAuth) server.WithModule(authentication);
+            // AUTHENTICATION
+            if(conf.enableCookieAuth) {
+                // COOKIE BASED
+                SecureSessionManager cookieAuth = new SecureSessionManager();
+                server.WithSessionManager(cookieAuth);
+                server.WithWebApi("/admin/login", m => m.WithController<logonLogoffController>(()=>{return new logonLogoffController(conf, url,cookieAuth);}));
+                server.WithModule(new EnforceAuth());
+            }
+            else if(conf.enableBasicAuth){
+                // BASIC AUTH
+                CustomBaseAthentication authentication = new CustomBaseAthentication(conf);
+                if(conf.enableBasicAuth) server.WithModule(authentication);
+            }
             
             // AUTHORIZZATION
             AuthorizationModule authorizzation = new AuthorizationModule(conf);
             server.WithModule(authorizzation);
-
-            /*if(conf.enableBasicAuth) server.WithAction("/logout",HttpVerb.Any, async (ctx)=>{ 
-                if(passed) {
-                    passed = false;
-                    ctx.Redirect("/");
-                }
-                else {
-                    passed = true;
-                    ctx.Response.StatusCode = 401;
-                    ctx.Response.Headers.Add("WWW-Authenticate", "Basic realm=Access to site");
-                    await ctx.SendStringAsync("<script>setTimeout(()=>{window.location = '/'},3000)</script>","text/html",Encoding.UTF8);
-                }
-
-            });*/
 
             // API routes
             if(conf.enableREST) 
@@ -70,7 +66,11 @@ namespace opcRESTconnector {
             return server;
         }
 
-
+        private static string buildHostURL(RESTconfigs conf){
+            var url =  conf.https?"https":"http" + "://" + conf.host + ":" + conf.port + "/" ;
+            if(conf.urlPrefix != "") url = url + conf.urlPrefix;
+            return url;
+        }
         private static async Task customHttpErrorCallback (IHttpContext ctx, IHttpException ex) {
 
             ctx.Response.StatusCode = ex.StatusCode;

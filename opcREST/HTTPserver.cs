@@ -35,7 +35,7 @@ namespace opcRESTconnector {
                 // COOKIE BASED
                 SecureSessionManager cookieAuth = new SecureSessionManager();
                 server.WithSessionManager(cookieAuth);
-                server.WithWebApi("/admin/login", m => m.WithController<logonLogoffController>(()=>{return new logonLogoffController(conf, url,cookieAuth);}));
+                server.WithWebApi("/admin", m => m.WithController<logonLogoffController>(()=>{return new logonLogoffController(conf, url,cookieAuth);}));
                 server.WithModule(new EnforceAuth());
             }
             else if(conf.enableBasicAuth){

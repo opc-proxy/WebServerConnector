@@ -104,22 +104,28 @@ namespace opcRESTconnector.Session
 
         public override void Delete(IHttpContext context)
         {
+            RemoveSession(context);
+        }
+
+        public SimpleSession RemoveSession(IHttpContext context){
+
             var id = GetSessionId(context);
 
-            if (string.IsNullOrEmpty(id))
-                return;
+            var return_session = new SimpleSession();
+            if (string.IsNullOrEmpty(id))  return return_session;
 
             lock (_sessions)
             {
                 if (_sessions.TryGetValue(id, out var session)){
                     session.EndUse(() => { });
-                    _sessions.TryRemove(id, out var x); 
-                    logger.Info("Session Removed : " + x.Id );
+                    _sessions.TryRemove(id, out return_session); 
+                    logger.Info("Session Removed : " + return_session.Id );
                 }
             }
             
             context.Request.Cookies.Add(BuildSessionCookie(string.Empty));
             context.Response.Cookies.Add(BuildSessionCookie(string.Empty));
+            return return_session;
         }
 
     }

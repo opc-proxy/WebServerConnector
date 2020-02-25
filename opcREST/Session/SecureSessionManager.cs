@@ -15,8 +15,11 @@ namespace opcRESTconnector.Session
     public class SecureSessionManager : LSManagerCopy {
         private byte[] secret;
         public static NLog.Logger logger = null;
+
+        public UserStore userStore;
         
-        public SecureSessionManager(){
+        public SecureSessionManager( RESTconfigs conf){
+
             secret = new byte[32];
             var rnd = new RNGCryptoServiceProvider();
             rnd.GetNonZeroBytes(secret);
@@ -28,6 +31,7 @@ namespace opcRESTconnector.Session
 
             logger = LogManager.GetLogger(this.GetType().Name);
 
+            userStore = new UserStore(conf);
         }
         
         /// <summary>

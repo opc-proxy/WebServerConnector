@@ -42,7 +42,7 @@ namespace opcRESTconnector
 
         [Route(HttpVerb.Get, "/{node_name}")]
         public  ReadResponse GetNode(string node_name){
-           
+           Console.WriteLine("In get " + HttpContext.Session.Id);
             // Check if Authorized
             var role = (AuthRoles)(HttpContext.Items["Role"] ?? AuthRoles.Undefined);
             if(_conf.enableBasicAuth && role == AuthRoles.Undefined) 

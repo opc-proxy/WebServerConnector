@@ -35,7 +35,7 @@ namespace opcRESTconnector
         public bool enableAPIkey {get; set;}
         public bool enableREST {get; set;}
         public bool enableJSON {get; set;}
-
+        public int sessionExpiryHours{get; set;}
         public string apyKey {get; set;}
         public List<List<string>> userAuth {get; set;}
         public string staticFilesPath {get; set;}
@@ -55,6 +55,7 @@ namespace opcRESTconnector
             port = "8082";
             https = false;
             urlPrefix = "";
+            sessionExpiryHours = 720;
         }
 
     }

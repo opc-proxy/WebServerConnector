@@ -1,10 +1,7 @@
-using System.Text;
 using System.Threading.Tasks;
 using EmbedIO;
-using EmbedIO.Actions;
 using EmbedIO.WebApi;
 using Swan.Logging;
-using EmbedIO.Authentication;
 using System;
 using OpcProxyCore;
 using opcRESTconnector.Session;
@@ -33,7 +30,7 @@ namespace opcRESTconnector {
             // AUTHENTICATION
             if(conf.enableCookieAuth) {
                 // COOKIE BASED
-                SecureSessionManager cookieAuth = new SecureSessionManager();
+                SecureSessionManager cookieAuth = new SecureSessionManager(conf);
                 server.WithSessionManager(cookieAuth);
                 server.WithWebApi("/admin", m => m.WithController<logonLogoffController>(()=>{return new logonLogoffController(conf, url,cookieAuth);}));
                 server.WithModule(new EnforceAuth());

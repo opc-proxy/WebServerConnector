@@ -111,7 +111,7 @@ namespace opcRESTconnector{
 
             var current_session = session_manager.RegisterSession(HttpContext);
             Console.WriteLine("pass0");
-            current_session["user"] = user;
+            current_session["user"] = new UserData(user);
             Console.WriteLine("pass1");
             HttpContext.Redirect("/");
         }

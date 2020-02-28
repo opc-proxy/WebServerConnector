@@ -27,7 +27,7 @@ namespace opcRESTconnector{
             ";
         }
 
-        public static string forbidden(){
+        public static string forbidden(string redirectTo){
             return @"
             <!DOCTYPE html>
             <html lang='en'>
@@ -39,7 +39,7 @@ namespace opcRESTconnector{
             </head>
             <body>
                 <h1>NOT Authorized... </h1> <h3>Redirecting...</h3>
-                <script>setTimeout(()=>{ window.location = '/admin/login/'},1500)</script>
+                <script>setTimeout(()=>{ window.location = '"+ redirectTo + @"'},1500)</script>
             </body>
             </html>
             ";

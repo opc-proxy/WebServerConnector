@@ -40,7 +40,7 @@ namespace opcRESTconnector {
         }
     }
 
-    public class AuthorizationModule : WebModuleBase
+/*    public class AuthorizationModule : WebModuleBase
     {
         Dictionary<string, AuthRoles> user_roles;
 
@@ -94,10 +94,10 @@ namespace opcRESTconnector {
             });
         }
     }
-
+*/
     public class EnforceAuth : WebModuleBase
     {
-         public EnforceAuth() : base("/") {}
+        public EnforceAuth() : base("/") {}
         public override bool IsFinalHandler => false;
 
         protected override Task OnRequestAsync(IHttpContext context)
@@ -113,7 +113,7 @@ namespace opcRESTconnector {
             if(String.IsNullOrEmpty(session.Id) || session.IsEmpty ) { 
                 context.Response.StatusCode = 403;
                 context.SetHandled();
-                return context.SendStringAsync(HTMLtemplates.forbidden(),"text/html",Encoding.UTF8);
+                return context.SendStringAsync(HTMLtemplates.forbidden("/admin/login/"),"text/html",Encoding.UTF8);
                 //throw HttpException.Forbidden("Unauthorized Access");
                 //throw HttpException.Redirect("/admin/login/",401);
             }

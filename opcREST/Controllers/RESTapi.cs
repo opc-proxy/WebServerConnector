@@ -6,6 +6,7 @@ using EmbedIO.WebApi;
 using EmbedIO;
 using System;
 using OpcProxyCore;
+using opcRESTconnector.Session;
 
 namespace opcRESTconnector
 {
@@ -43,11 +44,16 @@ namespace opcRESTconnector
         [Route(HttpVerb.Get, "/{node_name}")]
         public  ReadResponse GetNode(string node_name){
            Console.WriteLine("In get " + HttpContext.Session.Id);
+            UserData _user = (UserData) HttpContext.Session["user"];
+            Console.WriteLine(_user.ToString());
+            if(_conf.enableBasicAuth && !_user.hasReadRights())
+                throw HttpException.Forbidden();
+
             // Check if Authorized
-            var role = (AuthRoles)(HttpContext.Items["Role"] ?? AuthRoles.Undefined);
+            /*var role = (AuthRoles)(HttpContext.Items["Role"] ?? AuthRoles.Undefined);
             if(_conf.enableBasicAuth && role == AuthRoles.Undefined) 
                 throw HttpException.Forbidden();
-            
+            */
            try{
                 List<string> names = new List<string>{ node_name };
                 ReadStatusCode status;
@@ -65,6 +71,7 @@ namespace opcRESTconnector
         [Route(HttpVerb.Post, "/{node_name}")]
          public async Task<WriteResponse> PostData(string node_name) 
         {
+            UserData _user = (UserData) HttpContext.Session["user"];
               // Check if Authorized
             var role = (AuthRoles)(HttpContext.Items["Role"] ?? AuthRoles.Undefined);
             if(_conf.enableBasicAuth && role != AuthRoles.Writer && role != AuthRoles.Admin ) 

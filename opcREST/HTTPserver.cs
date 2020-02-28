@@ -35,15 +35,19 @@ namespace opcRESTconnector {
                 server.WithWebApi("/admin", m => m.WithController<logonLogoffController>(()=>{return new logonLogoffController(conf, url,cookieAuth);}));
                 server.WithModule(new EnforceAuth());
             }
-            else if(conf.enableBasicAuth){
+            else {
+                DummySessionManager baseSession = new DummySessionManager(conf);
+                server.WithSessionManager(baseSession);
+            }
+            if(conf.enableBasicAuth && !conf.enableCookieAuth){
                 // BASIC AUTH
                 CustomBaseAthentication authentication = new CustomBaseAthentication(conf);
-                if(conf.enableBasicAuth) server.WithModule(authentication);
+                server.WithModule(authentication);  
             }
             
             // AUTHORIZZATION
-            AuthorizationModule authorizzation = new AuthorizationModule(conf);
-            server.WithModule(authorizzation);
+            //AuthorizationModule authorizzation = new AuthorizationModule(conf);
+            //server.WithModule(authorizzation);
 
             // API routes
             if(conf.enableREST) 

@@ -29,7 +29,6 @@ namespace opcRESTconnector
         /// URL of your endpoint plus a prefix. Example: "test" would get you to "http://localhost:port/test/" as your root.
         /// </summary>
         public string urlPrefix {get; set;}
-        public bool enableBasicAuth {get; set;}
         public bool enableCookieAuth {get; set;}
         public bool enableStaticFiles {get; set;}
         public bool enableAPIkey {get; set;}
@@ -47,7 +46,6 @@ namespace opcRESTconnector
             staticFilesPath = "./public/";
             enableAPIkey = false;
             enableStaticFiles = false;
-            enableBasicAuth = false;
             enableCookieAuth = false;
             enableREST = true;
             enableJSON = true;

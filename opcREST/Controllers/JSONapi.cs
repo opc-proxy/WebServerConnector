@@ -5,8 +5,7 @@ using EmbedIO;
 using System;
 using OpcProxyCore;
 using Newtonsoft.Json.Linq;
-
-
+using opcRESTconnector.Session;
 
 namespace opcRESTconnector
 {
@@ -28,8 +27,8 @@ namespace opcRESTconnector
         public async Task<ReadResponse> GetNodes(){
             
             // Check if Authorized
-            var role = (AuthRoles)(HttpContext.Items["Role"] ?? AuthRoles.Undefined);
-            if(_conf.enableBasicAuth && role == AuthRoles.Undefined) 
+            UserData _user = (UserData) HttpContext.Session["user"];
+            if(_conf.enableCookieAuth && (_user == null || !_user.hasReadRights()))
                 throw HttpException.Forbidden();
             
             if( !HttpContext.Request.ContentType.Contains("application/json")) {
@@ -64,10 +63,9 @@ namespace opcRESTconnector
         [Route(HttpVerb.Post, "/write")]
          public async Task<WriteResponse> PostData() 
         {
-
+            UserData _user = (UserData) HttpContext.Session["user"];
             // Check if Authorized
-            var role = (AuthRoles)(HttpContext.Items["Role"] ?? AuthRoles.Undefined);
-            if(_conf.enableBasicAuth && role != AuthRoles.Writer && role != AuthRoles.Admin ) 
+            if(_conf.enableCookieAuth && (_user == null || !_user.hasWriteRights() ))
                 throw HttpException.Forbidden();
             
             if( !HttpContext.Request.ContentType.Contains("application/json")) 

@@ -39,16 +39,7 @@ namespace opcRESTconnector {
                 DummySessionManager baseSession = new DummySessionManager(conf);
                 server.WithSessionManager(baseSession);
             }
-            if(conf.enableBasicAuth && !conf.enableCookieAuth){
-                // BASIC AUTH
-                CustomBaseAthentication authentication = new CustomBaseAthentication(conf);
-                server.WithModule(authentication);  
-            }
             
-            // AUTHORIZZATION
-            //AuthorizationModule authorizzation = new AuthorizationModule(conf);
-            //server.WithModule(authorizzation);
-
             // API routes
             if(conf.enableREST) 
                 server.WithWebApi ("/api/REST", m => m.WithController<nodeRESTController> (()=>{return new nodeRESTController(manager,conf);}));

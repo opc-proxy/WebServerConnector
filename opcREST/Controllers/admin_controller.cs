@@ -12,112 +12,112 @@ using opcRESTconnector.Session;
 
 namespace opcRESTconnector{
     public  class logonLogoffController : WebApiController{
-        string _url;
-        AntiCSRF.AntiCSRF csrf_gen;
-        RESTconfigs _conf;
+        CSRF_utils _csrf;
         SecureSessionManager session_manager;        
 
-        public logonLogoffController(RESTconfigs conf, string url, SecureSessionManager ssm){
-            _conf = conf;
-            _url = url;
-
-            var csrf_conf = new AntiCSRF.Config.AntiCSRFConfig(){ expiryInSeconds = 180 };
-            csrf_gen = new AntiCSRF.AntiCSRF(csrf_conf);
-
+        public logonLogoffController(SecureSessionManager ssm, CSRF_utils csrf){
+            _csrf = csrf;
             session_manager = ssm;
         }
 
-        [Route(HttpVerb.Get,"/login")]
-        public async Task logon(){
-            
-            var token = csrf_gen.GenerateToken("salt","whatever");
-            Console.WriteLine(token);
-            var cookie = new System.Net.Cookie("_csrf",token + "; SameSite=Strict");
-            cookie.HttpOnly = true;
-            cookie.Expires = DateTime.Now.AddMinutes(3) ;
-            HttpContext.Response.SetCookie(cookie);
-            await HttpContext.SendStringAsync(HTMLtemplates.loginPage(token,_url +"admin/login"),"text/html",Encoding.UTF8);
+        [Route(HttpVerbs.Get,"/login")]
+        public async Task logon(string message="", string user=""){
+            var token = _csrf.setCSRFcookie(HttpContext);
+            await HttpContext.SendStringAsync(HTMLtemplates.loginPage(token,"/admin/login", message, user),"text/html",Encoding.UTF8);
         }
         
         
-        [Route(HttpVerb.Post, "/login")]
+        [Route(HttpVerbs.Post, "/login")]
         public async Task check_logon(){
 
+            if(!_csrf.validateCSRFtoken(HttpContext))  { await AuthUtils.sendForbiddenTemplate(HttpContext); return; }
             var data = await HttpContext.GetRequestFormDataAsync();
-            System.Net.Cookie req_cookie = null;
-            foreach (var c in HttpContext.Request.Cookies)
-            {
-                if(c.Name == "_csrf") {
-                    req_cookie = c;
-                    Console.WriteLine("found cookie "+ c.Value);
-                }
-            } 
-            System.Net.Cookie resp_cookie = new System.Net.Cookie();
-
-            if(req_cookie == null) {
-                // probaly the cookie has expired
-                // set some session cookie for error display
-                HttpContext.Redirect("/admin/login/");
-                return;
-            }
-            
-            if(!csrf_gen.ValidateToken(req_cookie.Value,"whatever","salt")) throw HttpException.Forbidden();
-            Console.WriteLine("CSRF token Valid");
-
-            if( !data.ContainsKey("_csrf") ) throw HttpException.Forbidden();
-            Console.WriteLine("CSRF token present in data");
-            
-            if( req_cookie.Value != data.Get("_csrf") ) throw HttpException.Forbidden();
-            Console.WriteLine("CSRF token and Cookie are same");
 
             string user = data.Get("user") ;
             string pw = data.Get("pw") ;
-            
-            Console.WriteLine("Very good " + user + " " + pw);
             
             // validate password
             var _user = session_manager.userStore.GetUser(user);
             
             if( !_user.password.isValid(pw) ) {        
                 // set some session cookie for error display
-                HttpContext.Redirect("/admin/login/");
+                //HttpContext.Redirect("/admin/login/");
+                await logon("username or password invalid", user);
                 return;
             }
 
             // delete the current session if any
-            session_manager.Delete(HttpContext);
+            session_manager.Delete(HttpContext,"");
 
             var current_session = session_manager.RegisterSession(HttpContext);
             Console.WriteLine("pass0");
-            current_session["user"] = new UserData(user);
-            Console.WriteLine("pass1");
+            current_session["user"] = _user;
+            Console.WriteLine(_user.ToString());
             HttpContext.Redirect("/");
         }
         
-        [Route(HttpVerb.Get, "/logout")]
+        [Route(HttpVerbs.Get, "/logout")]
         public Task logout(){
             
            var session =  session_manager.RemoveSession(HttpContext);
            if(String.IsNullOrEmpty(session.Id)){
-                HttpContext.Response.StatusCode = 403;
-                HttpContext.SetHandled();
-                return HttpContext.SendStringAsync(HTMLtemplates.forbidden("/admin/login/"),"text/html",Encoding.UTF8);
+                return AuthUtils.sendForbiddenTemplate(HttpContext);
            }
 
            throw HttpException.Redirect("/admin/login/",303);
         }
 
+        [Route(HttpVerbs.Get,"/write_access")]
+        public Task write_access(){
+            if( string.IsNullOrEmpty(HttpContext.Session.Id) ) return AuthUtils.sendForbiddenTemplate(HttpContext);
+            var token = _csrf.setCSRFcookie(HttpContext);
+            var referrer = HttpContext.Request.Headers.Keys ;
+            UserData _user = (UserData) HttpContext.Session["user"];
+            string user_name = (_user != null) ? _user.userName : "Anonymous";
+            return HttpContext.SendStringAsync(HTMLtemplates.writeAccess(token,"/admin/write_access",user_name),"text/html",Encoding.UTF8); 
+        }
 
-        [Route(HttpVerb.Any, "/{data}", true)]
+        [Route(HttpVerbs.Post,"/write_access")]
+        public Task check_write_access(){
+            // has an authenticated session 
+            if( string.IsNullOrEmpty(HttpContext.Session.Id) ) { return  AuthUtils.sendForbiddenTemplate(HttpContext); }
+            // has a valid CSRF token
+            if(!_csrf.validateCSRFtoken(HttpContext))   return  AuthUtils.sendForbiddenTemplate(HttpContext);
+
+            var _data = HttpContext.GetRequestFormDataAsync();
+            _data.Wait();
+            var data = _data.Result;
+
+            string pw = data.Get("pw") ;
+            string referrer = data.Get("referrer") ;
+            Console.WriteLine("write access pw : " + pw);
+            if(string.IsNullOrEmpty(pw)) throw HttpException.Redirect("/admin/write_access",303);
+            
+            UserData _user = (UserData) HttpContext.Session["user"];
+            if(!_user.password.isValid(pw) )  throw HttpException.Redirect("/admin/write_access",303);
+
+            if(!_user.AllowWrite(TimeSpan.FromMinutes(30)))  return  AuthUtils.sendForbiddenTemplate(HttpContext); 
+            throw HttpException.Redirect("/");
+        }
+
+        [Route(HttpVerbs.Any, "/{data}", true)]
          public Task forbid(){
             if( string.IsNullOrEmpty(HttpContext.Session.Id) ){
-                HttpContext.Response.StatusCode = 403;
-                HttpContext.SetHandled();
-                return HttpContext.SendStringAsync(HTMLtemplates.forbidden("admin/login/"),"text/html",Encoding.UTF8);
+                return AuthUtils.sendForbiddenTemplate(HttpContext);
+            }
+            else throw HttpException.NotFound();
+         }
+        
+        [Route(HttpVerbs.Any, "/")]
+         public Task forbid2(){
+            if( string.IsNullOrEmpty(HttpContext.Session.Id) ){
+                return AuthUtils.sendForbiddenTemplate(HttpContext);
             }
             else throw HttpException.NotFound();
          }
     }
+
+
         
     
 }

@@ -23,7 +23,7 @@ namespace opcRESTconnector
 
 
 
-        [Route(HttpVerb.Post, "/read")]
+        [Route(HttpVerbs.Post, "/read")]
         public async Task<ReadResponse> GetNodes(){
             
             // Check if Authorized
@@ -60,7 +60,7 @@ namespace opcRESTconnector
         }
 
         
-        [Route(HttpVerb.Post, "/write")]
+        [Route(HttpVerbs.Post, "/write")]
          public async Task<WriteResponse> PostData() 
         {
             UserData _user = (UserData) HttpContext.Session["user"];

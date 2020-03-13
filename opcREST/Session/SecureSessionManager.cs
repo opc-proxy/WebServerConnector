@@ -27,7 +27,7 @@ namespace opcRESTconnector.Session
             CookieHttpOnly = true;
             CookieName = "_opcSession";
             CookiePath = "/" ;
-            CookieDuration = TimeSpan.FromDays(30);
+            CookieDuration = TimeSpan.FromHours(conf.sessionExpiryHours);
 
             logger = LogManager.GetLogger(this.GetType().Name);
 
@@ -106,7 +106,7 @@ namespace opcRESTconnector.Session
             return c;
         }
 
-        public override void Delete(IHttpContext context)
+        public override void Delete(IHttpContext context, string x)
         {
             RemoveSession(context);
         }

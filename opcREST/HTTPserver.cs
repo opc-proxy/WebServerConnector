@@ -22,7 +22,7 @@ namespace opcRESTconnector {
             string url = buildHostURL(conf);
             var server = new WebServer ( o => o.WithUrlPrefix(url).WithMode(HttpListenerMode.EmbedIO));
 
-            server.WithAction("/favicon.ico",HttpVerb.Get,(ctx)=>{
+            server.WithAction("/favicon.ico",HttpVerbs.Get,(ctx)=>{
                 ctx.Redirect("https://avatars0.githubusercontent.com/u/52571081?s=200&v=4",308);
                 return Task.CompletedTask;
             });
@@ -31,8 +31,9 @@ namespace opcRESTconnector {
             if(conf.enableCookieAuth) {
                 // COOKIE BASED
                 SecureSessionManager cookieAuth = new SecureSessionManager(conf);
+                var csrf = new CSRF_utils();
                 server.WithSessionManager(cookieAuth);
-                server.WithWebApi("/admin", m => m.WithController<logonLogoffController>(()=>{return new logonLogoffController(conf, url,cookieAuth);}));
+                server.WithWebApi("/admin", m => m.WithController<logonLogoffController>(()=>{return new logonLogoffController(cookieAuth,csrf);}));
                 server.WithModule(new EnforceAuth());
             }
             else {

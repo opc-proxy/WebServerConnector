@@ -227,7 +227,7 @@ namespace opcRESTconnector.Session
         }
 
         /// <inheritdoc />
-        public virtual void Delete(IHttpContext context)
+        public virtual void Delete(IHttpContext context, string x)
         {
             var id = GetSessionId(context);
 

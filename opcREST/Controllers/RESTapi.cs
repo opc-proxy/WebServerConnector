@@ -41,7 +41,7 @@ namespace opcRESTconnector
 
 
 
-        [Route(HttpVerb.Get, "/{node_name}")]
+        [Route(HttpVerbs.Get, "/{node_name}")]
         public  ReadResponse GetNode(string node_name){
             UserData _user = (UserData) HttpContext.Session["user"];
             if(_conf.enableCookieAuth && (_user == null || !_user.hasReadRights()))
@@ -61,7 +61,7 @@ namespace opcRESTconnector
         }
 
         
-        [Route(HttpVerb.Post, "/{node_name}")]
+        [Route(HttpVerbs.Post, "/{node_name}")]
          public async Task<WriteResponse> PostData(string node_name) 
         {
             UserData _user = (UserData) HttpContext.Session["user"];

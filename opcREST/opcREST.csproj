@@ -7,13 +7,14 @@
   <ItemGroup>
 	  <!--    <PackageReference Include="EmbedIo" Version="3.3.1" />-->
     <PackageReference Include="AntiCSRF" Version="2.0.0" />
+    <PackageReference Include="EmbedIO" Version="3.4.3" />
     <PackageReference Include="jose-jwt" Version="2.5.0" />
     <PackageReference Include="opcProxy.core" Version="0.1.9" />
-    <PackageReference Include="Unosquare.Swan.Lite" Version="2.6.1" />
+    <PackageReference Include="Unosquare.Swan.Lite" Version="3.0.0" />
   </ItemGroup>
 
 <ItemGroup>
-	<ProjectReference Include="..\..\embedio\src\EmbedIO\EmbedIO.csproj" />
+	<!--<ProjectReference Include="..\..\embedio\src\EmbedIO\EmbedIO.csproj" />-->
   
   </ItemGroup>
 

@@ -23,7 +23,7 @@ namespace opcRESTconnector.Session{
             return return_session;        
         }
 
-        public void Delete(IHttpContext context)
+        public void Delete(IHttpContext context, String x)
         {
             //throw new NotImplementedException();
         }

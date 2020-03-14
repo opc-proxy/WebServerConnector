@@ -11,7 +11,7 @@ namespace opcRESTconnector.Session {
         public AuthRoles role {get;set;}
         private DateTime write_expiry {get; set;}
 
-        public UserData(string user_name = ""){
+        public UserData(string user_name = "Anonymous"){
             userName = user_name;
             password = new Password();
             role = AuthRoles.Undefined;

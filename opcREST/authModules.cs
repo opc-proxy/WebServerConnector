@@ -45,10 +45,10 @@ namespace opcRESTconnector {
     }
 
     public class AuthUtils {
-        public static Task sendForbiddenTemplate(IHttpContext context){
+        public static Task sendForbiddenTemplate(IHttpContext context, string redirectURL = Routes.login){
             context.Response.StatusCode = 403;
             context.SetHandled();
-            return context.SendStringAsync(HTMLtemplates.forbidden("/admin/login/"),"text/html",Encoding.UTF8);
+            return context.SendStringAsync(HTMLtemplates.forbidden(redirectURL),"text/html",Encoding.UTF8);
         }
     }
 

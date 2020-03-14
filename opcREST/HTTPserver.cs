@@ -33,7 +33,7 @@ namespace opcRESTconnector {
                 SecureSessionManager cookieAuth = new SecureSessionManager(conf);
                 var csrf = new CSRF_utils();
                 server.WithSessionManager(cookieAuth);
-                server.WithWebApi("/admin", m => m.WithController<logonLogoffController>(()=>{return new logonLogoffController(cookieAuth,csrf);}));
+                server.WithWebApi(BaseRoutes.admin, m => m.WithController<logonLogoffController>(()=>{return new logonLogoffController(cookieAuth,csrf);}));
                 server.WithModule(new EnforceAuth());
             }
             else {

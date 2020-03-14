@@ -13,9 +13,4 @@
     <PackageReference Include="Unosquare.Swan.Lite" Version="3.0.0" />
   </ItemGroup>
 
-<ItemGroup>
-	<!--<ProjectReference Include="..\..\embedio\src\EmbedIO\EmbedIO.csproj" />-->
-  
-  </ItemGroup>
-
 </Project>

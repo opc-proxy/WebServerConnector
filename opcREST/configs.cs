@@ -39,6 +39,7 @@ namespace opcRESTconnector
         public string apyKey {get; set;}
         public List<List<string>> userAuth {get; set;}
         public string staticFilesPath {get; set;}
+        public bool serverLog {get; set;}
 
 
         public RESTconfigs(){
@@ -56,6 +57,7 @@ namespace opcRESTconnector
             urlPrefix = "";
             sessionExpiryHours = 720;
             writeExpiryMinutes = 30;
+            serverLog = true;
         }
 
     }

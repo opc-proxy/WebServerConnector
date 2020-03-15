@@ -9,6 +9,7 @@ using EmbedIO.Utilities;
 using EmbedIO.WebApi;
 using Newtonsoft.Json.Linq;
 using opcRESTconnector.Session;
+using NLog;
 
 namespace opcRESTconnector {
 
@@ -21,7 +22,11 @@ namespace opcRESTconnector {
 
     public class EnforceAuth : WebModuleBase
     {
-        public EnforceAuth() : base("/") {}
+        public static NLog.Logger logger = null;
+
+        public EnforceAuth() : base("/") {
+            logger = LogManager.GetLogger(this.GetType().Name);
+        }
         public override bool IsFinalHandler => false;
 
         protected override Task OnRequestAsync(IHttpContext context)
@@ -29,11 +34,11 @@ namespace opcRESTconnector {
             object usr = null;
             var session = context.Session;
             session.TryGetValue("user",out usr);
-            Console.WriteLine("Auth Module: sid " + session.Id);
-            Console.WriteLine("Auth Module: Empty " + session.IsEmpty);
-            Console.WriteLine("Auth Module: Count " + session.Count);
-            Console.WriteLine("Auth Module: User " + session.ContainsKey("user"));
-            Console.WriteLine("Auth Module: User1 " + usr);
+            logger.Debug("Auth Module: sid " + session.Id);
+            logger.Debug("Auth Module: Empty " + session.IsEmpty);
+            logger.Debug("Auth Module: Count " + session.Count);
+            logger.Debug("Auth Module: User " + session.ContainsKey("user"));
+            logger.Debug("Auth Module: User1 " + usr);
             if(String.IsNullOrEmpty(session.Id) || session.IsEmpty ) { 
                 
                 return AuthUtils.sendForbiddenTemplate(context);
@@ -60,7 +65,11 @@ namespace opcRESTconnector {
         AntiCSRF.AntiCSRF csrf_gen;
         string salt;
         string secret;
+        public static NLog.Logger logger = null;
+
         public CSRF_utils(){
+            
+            logger = LogManager.GetLogger(this.GetType().Name);
             var csrf_conf = new AntiCSRF.Config.AntiCSRFConfig(){ expiryInSeconds = 180 };
             csrf_gen = new AntiCSRF.AntiCSRF(csrf_conf);
             salt = "XYfday567D";
@@ -76,7 +85,7 @@ namespace opcRESTconnector {
         /// <param name="context"></param>
         public string setCSRFcookie(IHttpContext context){
             var token = csrf_gen.GenerateToken(salt,secret);
-            Console.WriteLine("Set CSRF: " + token);
+            logger.Debug("Set CSRF: " + token);
             var cookie = new System.Net.Cookie("_csrf",token + "; SameSite=Strict");
             cookie.HttpOnly = true;
             cookie.Expires = DateTime.Now.AddMinutes(3) ;
@@ -94,19 +103,19 @@ namespace opcRESTconnector {
             {
                 if(c.Name == "_csrf") {
                     req_cookie = c;
-                    Console.WriteLine("found CSRF "+ c.Value);
+                    logger.Debug("found CSRF "+ c.Value);
                 }
             } 
             System.Net.Cookie resp_cookie = new System.Net.Cookie();
             if(req_cookie == null) return false;
             if(!csrf_gen.ValidateToken(req_cookie.Value,secret,salt)) return false;
-            Console.WriteLine("CSRF token Valid");
+            logger.Debug("CSRF token Valid");
 
             if( !data.ContainsKey("_csrf") ) return false;
-            Console.WriteLine("CSRF token present in data");
+            logger.Debug("CSRF token present in data");
             
             if( req_cookie.Value != data.Get("_csrf") ) return false;
-            Console.WriteLine("CSRF token and Cookie are same");
+            logger.Debug("CSRF token and Cookie are same");
 
             return true;
         }

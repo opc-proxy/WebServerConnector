@@ -1,4 +1,4 @@
-﻿
+﻿using Swan.Logging;
 using System.Threading;
 using Newtonsoft.Json.Linq;
 using OpcProxyClient;
@@ -33,10 +33,13 @@ namespace opcRESTconnector
 
         public void init(JObject config, CancellationTokenSource cts)
         {
-            try{
+            try{        
                 _conf = config.ToObject<RESTconfigsWrapper>().RESTapi;
+                if(!_conf.serverLog) Swan.Logging.Logger.UnregisterLogger<ConsoleLogger>();
                 server = HTTPServerBuilder.CreateWebServer(_conf,manager);
                 server.RunAsync(cts.Token);
+                // Bug in SWAN: https://github.com/unosquare/swan/issues/107
+                Console.CursorVisible = true;
             }
             catch(Exception ex){
                 logger.Error(ex.Message);
@@ -49,5 +52,7 @@ namespace opcRESTconnector
         {
             server.Dispose();
         }
+
+        
     }
 }

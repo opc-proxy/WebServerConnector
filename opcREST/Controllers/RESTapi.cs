@@ -28,6 +28,16 @@ namespace opcRESTconnector
 
             return r;
         }
+
+        /// <summary>
+        /// Wrapper for HttpContext.Redirect() Status code 303
+        /// </summary>
+        /// <returns></returns>
+        public static Task HttpRedirect(IHttpContext ctx, string url){
+            ctx.Redirect(url,303);
+            ctx.SetHandled();
+            return Task.CompletedTask;
+        }
     }
 
     public sealed class nodeRESTController : WebApiController

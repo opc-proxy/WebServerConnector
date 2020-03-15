@@ -1,8 +1,9 @@
 using System.Threading.Tasks;
 using EmbedIO;
+using EmbedIO.Files;
 using EmbedIO.WebApi;
-using Swan.Logging;
 using System;
+using System.IO;
 using OpcProxyCore;
 using opcRESTconnector.Session;
 namespace opcRESTconnector {
@@ -16,18 +17,13 @@ namespace opcRESTconnector {
         //// <param name="url"></param>
         /// <returns></returns>
         public static WebServer CreateWebServer (RESTconfigs conf, serviceManager manager) {
-            
+            var logger = NLog.LogManager.GetLogger("WebServer");
 
             string url = buildHostURL(conf);
             var server = new WebServer ( o => o.WithUrlPrefix(url).WithMode(HttpListenerMode.EmbedIO));
 
-            server.WithAction("/favicon.ico",HttpVerbs.Get,(ctx)=>{
-                ctx.Redirect("https://avatars0.githubusercontent.com/u/52571081?s=200&v=4",308);
-                return Task.CompletedTask;
-            });
-
-            string passwordHash = BCrypt.Net.BCrypt.HashPassword("mypasss");
-            Console.WriteLine("Bcrypt " + passwordHash);
+            // string passwordHash = BCrypt.Net.BCrypt.HashPassword("mypasss");
+            // Console.WriteLine("Bcrypt " + passwordHash);
 
             // AUTHENTICATION
             if(conf.enableCookieAuth) {
@@ -50,14 +46,18 @@ namespace opcRESTconnector {
                 server.WithWebApi (Routes.json, m => m.WithController<nodeJSONController> (()=>{return new nodeJSONController(manager,conf);}));
             
             // STATIC Files
-            if(conf.enableStaticFiles) server.WithStaticFolder("/",conf.staticFilesPath,false);
+            if(conf.enableStaticFiles) server.WithStaticFolder("/",conf.staticFilesPath,true);
             
             // exception handler
             server.HandleHttpException (customHttpErrorCallback);
 
             // Logging handler
-            server.StateChanged += (s, e) => $"WebServer New State - {e.NewState}".Info();
-
+            if(!conf.serverLog) { 
+                server.StateChanged += (s, e) => {
+                    if(e.NewState == WebServerState.Listening) logger.Info("Listening at " + url );
+                    else logger.Info("Is " + e.NewState.ToString() );
+                };
+            }
             return server;
         }
 
@@ -69,7 +69,6 @@ namespace opcRESTconnector {
         private static async Task customHttpErrorCallback (IHttpContext ctx, IHttpException ex) {
 
             ctx.Response.StatusCode = ex.StatusCode;
-            if(ex.StatusCode == 401) ctx.Response.Headers.Add("WWW-Authenticate", "Basic realm=Access to site");
 
             foreach (var item in ctx.Route.Keys){
                 Console.WriteLine(item);

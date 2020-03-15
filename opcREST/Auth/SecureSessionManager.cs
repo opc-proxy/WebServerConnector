@@ -41,7 +41,7 @@ namespace opcRESTconnector.Session
         /// <param name="context"></param>
         /// <returns></returns>
         public override ISession Create(IHttpContext context){
-            logger.Info("entered in create");
+            logger.Debug("entered in create");
             var id = GetSessionId(context);
 
             SimpleSession session;
@@ -50,8 +50,8 @@ namespace opcRESTconnector.Session
                 if (!string.IsNullOrEmpty(id) && _sessions.TryGetValue(id, out session))
                 {
                     session.BeginUse();
-                    logger.Info("Session Found");
-                    logger.Info("There are in total sessions : " + _sessions.Count);
+                    logger.Debug("Session Found");
+                    logger.Debug("There are in total sessions : " + _sessions.Count);
 
                 }
                 else session = new SimpleSession();
@@ -66,7 +66,7 @@ namespace opcRESTconnector.Session
         }
 
         public SimpleSession RegisterSession(IHttpContext context){
-            logger.Info("Registering Session");
+            logger.Debug("Registering Session");
 
             string id = UniqueIdGenerator.GetNext();
             SimpleSession session;
@@ -80,7 +80,7 @@ namespace opcRESTconnector.Session
             return session;
         }
         public string AuthenticateCookie(string cookieValue){
-            logger.Info("Authenticating cookie value " + cookieValue);
+            logger.Debug("Authenticating cookie value " + cookieValue);
             jwtPayload j = null;
             try{
                 string jwt = JWT.Decode(cookieValue,secret,JweAlgorithm.A256KW, JweEncryption.A256CBC_HS512);
@@ -88,19 +88,19 @@ namespace opcRESTconnector.Session
                 if(j.exp < DateTime.UtcNow.Ticks ) throw new Exception("token expired");
             }
             catch(Exception e) {
-                logger.Error("Auth failed: "+ e.Message);
+                logger.Debug("Auth failed: "+ e.Message);
                 j = new jwtPayload();
             }
             return j.sub;
         }
         public Cookie createSecureCookie(string id){
-            logger.Info("Creating cookie");
+            logger.Debug("Creating cookie");
             Cookie c = BuildSessionCookie(id);
             var payload = new jwtPayload();
             payload.exp = c.Expires.Ticks;
             payload.sub = c.Value;
             string token = Jose.JWT.Encode(payload.ToString(), secret, JweAlgorithm.A256KW, JweEncryption.A256CBC_HS512);
-            logger.Info("jwt created : " + token);
+            logger.Debug("jwt created : " + token);
             c.Value = token + "; SameSite=Strict";
             
             return c;
@@ -123,7 +123,7 @@ namespace opcRESTconnector.Session
                 if (_sessions.TryGetValue(id, out var session)){
                     session.EndUse(() => { });
                     _sessions.TryRemove(id, out return_session); 
-                    logger.Info("Session Removed : " + return_session.Id );
+                    logger.Debug("Session Removed : " + return_session.Id );
                 }
             }
             

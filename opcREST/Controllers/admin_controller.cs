@@ -53,10 +53,8 @@ namespace opcRESTconnector{
             session_manager.Delete(HttpContext,"");
 
             var current_session = session_manager.RegisterSession(HttpContext);
-            Console.WriteLine("pass0");
             current_session["user"] = _user;
-            Console.WriteLine(_user.ToString());
-            HttpContext.Redirect("/");
+            HttpContext.Redirect("/",303);
         }
         
         [Route(HttpVerbs.Get, BaseRoutes.logout)]
@@ -66,8 +64,8 @@ namespace opcRESTconnector{
            if(String.IsNullOrEmpty(session.Id)){
                 return AuthUtils.sendForbiddenTemplate(HttpContext);
            }
+           return Utils.HttpRedirect(HttpContext,Routes.login);
 
-           throw HttpException.Redirect(Routes.login,303);
         }
 
         [Route(HttpVerbs.Get,BaseRoutes.write_access)]
@@ -95,14 +93,14 @@ namespace opcRESTconnector{
 
             string pw = data.Get("pw") ;
             string referer = data.Get("_referrer") ?? "/";
-            Console.WriteLine("Referrer POST " + referer);
             if(string.IsNullOrEmpty(pw)) return write_access(referer,"Invalid Password");
             
             UserData _user = (UserData) HttpContext.Session["user"];
             if(!_user.password.isValid(pw) )  return write_access(referer,"Invalid Password");
 
             if(!_user.AllowWrite(TimeSpan.FromMinutes(_conf.writeExpiryMinutes)))  return  AuthUtils.sendForbiddenTemplate(HttpContext,referer); 
-            throw HttpException.Redirect(referer);
+            
+            return Utils.HttpRedirect(HttpContext,referer);
         }
 
         [Route(HttpVerbs.Any, "/{data}", true)]

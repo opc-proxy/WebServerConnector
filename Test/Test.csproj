@@ -23,6 +23,7 @@
     <Content Include="run_python_server.sh" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="proxy_config.json"  CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Opc.Ua.SampleClient.Config.xml"  CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="public/index.html"  CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

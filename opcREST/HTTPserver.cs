@@ -5,7 +5,6 @@ using Swan.Logging;
 using System;
 using OpcProxyCore;
 using opcRESTconnector.Session;
-
 namespace opcRESTconnector {
 
     public class HTTPServerBuilder {
@@ -27,13 +26,16 @@ namespace opcRESTconnector {
                 return Task.CompletedTask;
             });
 
+            string passwordHash = BCrypt.Net.BCrypt.HashPassword("mypasss");
+            Console.WriteLine("Bcrypt " + passwordHash);
+
             // AUTHENTICATION
             if(conf.enableCookieAuth) {
                 // COOKIE BASED
                 SecureSessionManager cookieAuth = new SecureSessionManager(conf);
                 var csrf = new CSRF_utils();
                 server.WithSessionManager(cookieAuth);
-                server.WithWebApi(BaseRoutes.admin, m => m.WithController<logonLogoffController>(()=>{return new logonLogoffController(cookieAuth,csrf);}));
+                server.WithWebApi(BaseRoutes.admin, m => m.WithController<logonLogoffController>(()=>{return new logonLogoffController(cookieAuth,csrf,conf);}));
                 server.WithModule(new EnforceAuth());
             }
             else {
@@ -43,9 +45,9 @@ namespace opcRESTconnector {
             
             // API routes
             if(conf.enableREST) 
-                server.WithWebApi ("/api/REST", m => m.WithController<nodeRESTController> (()=>{return new nodeRESTController(manager,conf);}));
+                server.WithWebApi (Routes.rest, m => m.WithController<nodeRESTController> (()=>{return new nodeRESTController(manager,conf);}));
             if(conf.enableJSON)
-                server.WithWebApi ("/api/JSON", m => m.WithController<nodeJSONController> (()=>{return new nodeJSONController(manager,conf);}));
+                server.WithWebApi (Routes.json, m => m.WithController<nodeJSONController> (()=>{return new nodeJSONController(manager,conf);}));
             
             // STATIC Files
             if(conf.enableStaticFiles) server.WithStaticFolder("/",conf.staticFilesPath,false);

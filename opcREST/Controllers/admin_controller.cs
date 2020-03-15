@@ -13,11 +13,14 @@ using opcRESTconnector.Session;
 namespace opcRESTconnector{
     public  class logonLogoffController : WebApiController{
         CSRF_utils _csrf;
-        SecureSessionManager session_manager;        
+        SecureSessionManager session_manager;     
 
-        public logonLogoffController(SecureSessionManager ssm, CSRF_utils csrf){
+        RESTconfigs _conf;   
+
+        public logonLogoffController(SecureSessionManager ssm, CSRF_utils csrf, RESTconfigs conf){
             _csrf = csrf;
             session_manager = ssm;
+            _conf = conf;
         }
 
         [Route(HttpVerbs.Get, BaseRoutes.login)]
@@ -98,7 +101,7 @@ namespace opcRESTconnector{
             UserData _user = (UserData) HttpContext.Session["user"];
             if(!_user.password.isValid(pw) )  return write_access(referer,"Invalid Password");
 
-            if(!_user.AllowWrite(TimeSpan.FromMinutes(30)))  return  AuthUtils.sendForbiddenTemplate(HttpContext,referer); 
+            if(!_user.AllowWrite(TimeSpan.FromMinutes(_conf.writeExpiryMinutes)))  return  AuthUtils.sendForbiddenTemplate(HttpContext,referer); 
             throw HttpException.Redirect(referer);
         }
 

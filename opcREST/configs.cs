@@ -35,6 +35,7 @@ namespace opcRESTconnector
         public bool enableREST {get; set;}
         public bool enableJSON {get; set;}
         public int sessionExpiryHours{get; set;}
+        public int writeExpiryMinutes{get; set;}
         public string apyKey {get; set;}
         public List<List<string>> userAuth {get; set;}
         public string staticFilesPath {get; set;}
@@ -54,6 +55,7 @@ namespace opcRESTconnector
             https = false;
             urlPrefix = "";
             sessionExpiryHours = 720;
+            writeExpiryMinutes = 30;
         }
 
     }

@@ -36,6 +36,7 @@ namespace Test
                     'RESTapi': {
                         port : 8087,
                         urlPrefix : '',
+                        'serverLog' : false,
                         'enableCookieAuth' : true,
                         userAuth : [
                             ['pino','123','R'],

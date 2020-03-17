@@ -38,9 +38,10 @@ namespace Test
                         urlPrefix : '',
                         'serverLog' : false,
                         'enableCookieAuth' : true,
+                        'writeExpiryMinutes' : 0.015,
                         userAuth : [
-                            ['pino','123','R'],
-                            ['gino','123','W'],
+                            ['pino','123','W'],
+                            ['gino','123','R'],
                             ['paul','1234','A'],
                             ['john','1234','J']
                         ],

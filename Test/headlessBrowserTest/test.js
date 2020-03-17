@@ -2,6 +2,7 @@ const Browser = require('zombie');
 //var assert = require('assert');
 var assert = require('chai').assert;
 
+
 // We're going to make requests to http://example.com/signup
 // Which will be routed to our test server localhost:3000
 let port = 8087;
@@ -56,11 +57,17 @@ describe('Login page', function() {
 });
 
 describe('Write Access',()=>{
+  
   it('Without permission Can read, not write',async ()=>{
     await browser.visit("/api/REST/MyVariable");
     browser.assert.success();
-    let resp = await post('/api/REST/MyVariable');
-    assert.equal(resp.status,403,"POST");
+    let resp = await postData('/api/JSON/read',{names:["MyVariable"]});
+    assert.equal(resp.status,200,"Read JSON");
+
+    resp = await post('/api/REST/MyVariable',"value=9");
+    assert.equal(resp.status,403,"POST FORM");
+    resp = await postData('/api/JSON/write',{"name":"MyVariable", value:8});
+    assert.equal(resp.status,403,"POST JSON");
   });
 
   it('Is CSRF protected', async ()=>{
@@ -68,16 +75,61 @@ describe('Write Access',()=>{
     checkCSRF();
   });
 
-  // Get write access
-  // Manage to write
-  // Write Rights expire
-  
-  // logout 
+  it('Grant access with Redirect',async ()=>{
+      browser.referer = "http://localhost:"+port.toString()+"/api/REST/MyVariable";
+      await  browser.visit('/admin/write_access');
+      browser.fill('pw', '123');
+      await browser.pressButton('Submit');
+      browser.assert.success();
+      browser.assert.url({ pathname: '/api/REST/MyVariable' },"Redirected Correctly"); 
+      
+  });
+
+  it('Can Write', async ()=>{
+    let resp = await post('/api/REST/MyVariable',"value=7");
+    assert.equal(resp.status,200,"POST FORM");
+    resp = await postData('/api/JSON/write',{"name":"MyVariable", value:8});
+    assert.equal(resp.status,200,"POST JSON");
+  });
+
+  it('Write Rights expire', async()=>{
+    await sleep(1000);
+    let resp = await post('/api/REST/MyVariable',"value=7");
+    assert.equal(resp.status,403,"POST");
+    resp = await postData('/api/JSON/write',{"name":"MyVariable", value:8});
+    assert.equal(resp.status,403,"POST");
+  });
+
+});
+
+describe('Logout',()=>{
+  let session = "";
+  it('Removes cookie', async ()=>{
+    session = browser.getCookie("_opcSession");
+    await  browser.visit('/admin/logout');
+    browser.assert.success();
+    browser.assert.url({ pathname: '/admin/login' },"Redirected Correctly"); 
+    let cookie = browser.getCookie("_opcSession");
+    assert.equal(cookie,"", "Session cookie is empty");
+  });
+
+  it('Delete session', async ()=>{
+    browser.setCookie("_opcSession", session);
+    try{
+      await browser.visit('/');
+      browser.assert.status(403,"Forbidden?")
+    }
+    catch{
+      browser.assert.status(403,"Forbidden")
+    }
+  });
+
+});
 
   // Reader do not get write access
   // cannot write
 
-});
+  // Session tampering
 
 
 
@@ -107,8 +159,25 @@ function forbid(location){
 }
 }
 
-async function post(location){
+async function post(location, data=""){
   return await browser.fetch("http://localhost:"+port.toString()+location, {
-       method : 'POST'  
+       method : 'POST' ,
+       headers: {
+         'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body : data  
       });
+}
+
+async function postData(location,data){
+  return await browser.fetch("http://localhost:"+port.toString()+location, {
+       method : 'POST', 
+       headers: {
+        'Content-Type': 'application/json'
+       },
+       body: JSON.stringify(data)
+      });
+}
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }

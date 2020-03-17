@@ -26,7 +26,7 @@ namespace opcRESTconnector.Session {
             return false;
         }
         public bool hasWriteRights(){
-            if(write_expiry.Ticks - 1 > DateTime.UtcNow.Ticks) return true;
+            if(write_expiry.Ticks  > DateTime.UtcNow.Ticks) return true;
             return false;
         }
 
@@ -63,10 +63,10 @@ namespace opcRESTconnector.Session {
             // fixme apply hashing
             return pwd;
         }
-        public Password(string pwd_default = "", int duration_hours = 0){
+        public Password(string pwd_default = "", double duration_hours = 0){
             admin_default = pwd_default;
             currentHash = "";
-            expiry = DateTime.UtcNow.Add(new TimeSpan(duration_hours,0,0));
+            expiry = DateTime.UtcNow.Add(TimeSpan.FromHours(duration_hours)) ;
             _pwd_is_updated = false;
         }
     }

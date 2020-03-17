@@ -34,8 +34,8 @@ namespace opcRESTconnector
         public bool enableAPIkey {get; set;}
         public bool enableREST {get; set;}
         public bool enableJSON {get; set;}
-        public int sessionExpiryHours{get; set;}
-        public int writeExpiryMinutes{get; set;}
+        public double sessionExpiryHours{get; set;}
+        public double writeExpiryMinutes{get; set;}
         public string apyKey {get; set;}
         public List<List<string>> userAuth {get; set;}
         public string staticFilesPath {get; set;}

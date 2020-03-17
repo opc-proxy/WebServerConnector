@@ -18,7 +18,6 @@ namespace Test
 {
     public class cookieAuthTest{
         serviceManager s;
-        logonLogoffController adminController;
         public cookieAuthTest(){
                   var json = JObject.Parse(@"
                 {

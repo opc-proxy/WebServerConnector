@@ -42,7 +42,6 @@ namespace Test
                             ['pino','123','W'],
                             ['gino','123','R'],
                             ['paul','1234','A'],
-                            ['john','1234','J']
                         ],
                         enableStaticFiles : true,
                         apyKey : 'pippo',

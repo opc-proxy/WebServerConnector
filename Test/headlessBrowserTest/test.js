@@ -30,9 +30,8 @@ describe('Login page', function() {
 
   it('Is CSRF protected', checkCSRF);
 
-  describe('Form submission', async function() {
 
-    it('Fail with wrong credetial', async function() {
+    it('Form submission: Fail with wrong credetial', async function() {
       browser.fill('user', 'pino');
       browser.fill('pw', '13');
       await browser.pressButton('Submit');
@@ -42,18 +41,20 @@ describe('Login page', function() {
       assert.isNull(c,"No session cookie");
     });
 
-
-    it('Success with right credetial', async function() {
+    it('Form submission: Success with right credetial', async function() {
       browser.fill('user', 'pino');
       browser.fill('pw', '123');
       await browser.pressButton('Submit');
       browser.assert.success();
       browser.assert.url({ pathname: '/' },"Redirected");
+      
+    });
+
+    it('Has session cookie', ()=>{
       let c = browser.getCookie("_opcSession");
       assert.isNotNull(c,"Has session cookie");
     });
 
-  });
 });
 
 describe('Write Access',()=>{
@@ -114,7 +115,8 @@ describe('Logout',()=>{
   });
 
   it('Delete session', async ()=>{
-    browser.setCookie("_opcSession", session);
+    browser.deleteCookie("_opcSession");
+    browser.setCookie({ name: '_opcSession', domain: browser.location.hostname, value: session });
     try{
       await browser.visit('/');
       browser.assert.status(403,"Forbidden?")
@@ -123,6 +125,68 @@ describe('Logout',()=>{
       browser.assert.status(403,"Forbidden")
     }
   });
+
+});
+
+describe('Reader',()=>{
+
+  it('Can login',async ()=>{
+    await  browser.visit('/admin/login');
+    browser.assert.success();
+    browser.fill("user","gino");
+    browser.fill("pw","123");
+    await browser.pressButton('Submit');
+    browser.assert.success();
+    browser.assert.url({ pathname: '/' },"Redirected Correctly"); 
+  });
+
+  it('Can Read, not write',async ()=>{
+    await browser.visit("/api/REST/MyVariable");
+    browser.assert.success();
+    let resp = await postData('/api/JSON/read',{names:["MyVariable"]});
+    assert.equal(resp.status,200,"Read JSON");
+
+    resp = await post('/api/REST/MyVariable',"value=7");
+    assert.equal(resp.status,403,"Write URL");
+    resp = await postData('/api/JSON/write',{"name":"MyVariable", value:8});
+    assert.equal(resp.status,403,"WRITE JSON");
+  });
+
+  it('Cannot gain write access',async ()=>{
+    //browser.referer = "http://localhost:"+port.toString()+"/api/REST/MyVariable";
+    await  browser.visit('/admin/write_access');
+    browser.fill('pw', '123');
+    try{
+      await browser.pressButton('Submit');
+      browser.assert.status(403, "Forbidden")
+    }
+    catch{
+      browser.assert.status(403, "Forbidden ok")
+    }
+  });
+
+});
+
+describe("Session Tampering", ()=>{
+  
+  it("Session cookie has > 32 carachters",()=>{
+    let c = browser.getCookie("_opcSession");
+    assert.isAbove(c.length, 32);
+  });
+
+  it("Simple Cookie tampering Fail",async ()=>{
+    let c = browser.getCookie("_opcSession");
+    let newcookie = c.slice(0,-2) + "K3";
+    browser.deleteCookie("_opcSession");
+    browser.setCookie({ name: '_opcSession', domain: browser.location.hostname, value: newcookie });
+    try{
+      await browser.visit("/");
+      browser.assert.status(403, "Forbidden")
+    }
+    catch{
+      browser.assert.status(403, "Forbidden ok")
+    }
+  })
 
 });
 

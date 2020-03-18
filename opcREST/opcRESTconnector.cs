@@ -44,13 +44,15 @@ namespace opcRESTconnector
             catch(Exception ex){
                 logger.Error(ex.Message);
                 cts.Cancel();
+                // Bug in SWAN: https://github.com/unosquare/swan/issues/107
+                Console.CursorVisible = true;
             }
         }
 
 
         public void clean()
         {
-            server.Dispose();
+            server?.Dispose();
         }
 
         

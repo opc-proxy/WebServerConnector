@@ -24,8 +24,7 @@ namespace opcRESTconnector.Session{
                             Role = AuthRoles.Admin;
                             break;
                         default:
-                            Role = AuthRoles.Undefined;
-                            break;
+                            throw new Exception("Configuration ERROR: User Role Type '" + user_item[2].ToString() + "' Not Supported");
                     }
 
                     var temp_user = new UserData(){ 
@@ -36,7 +35,7 @@ namespace opcRESTconnector.Session{
                     users.Add(user_item[0], temp_user);
                 }
                 else{
-                    throw new Exception("Malformed user item: " + user_item[0]);
+                    throw new Exception("Configuration ERROR: Malformed user item: " + user_item[0]);
                 }
             }
         }

@@ -8,6 +8,13 @@ using System;
 using Newtonsoft.Json.Linq;
 using System.Text;
 using opcRESTconnector.Session;
+using System.Net.Http;
+using System.Threading;
+using opcRESTconnector;
+using OpcProxyCore;
+using Newtonsoft.Json;
+using System.Net.Http.Headers ;
+using System.Net;
 
 
 namespace opcRESTconnector{
@@ -26,7 +33,8 @@ namespace opcRESTconnector{
         [Route(HttpVerbs.Get, BaseRoutes.login)]
         public async Task logon(string message="", string user=""){
             var token = _csrf.setCSRFcookie(HttpContext);
-            await HttpContext.SendStringAsync(HTMLtemplates.loginPage(token, message, user),"text/html",Encoding.UTF8);
+            var htmlTemplate = HTMLtemplates.loginPage(token, message, user, _conf.recaptchaClientKey);
+            await HttpContext.SendStringAsync( htmlTemplate,"text/html",Encoding.UTF8);
         }
         
         
@@ -38,6 +46,13 @@ namespace opcRESTconnector{
 
             string user = data.Get("user") ?? "_anonymous_";
             string pw = data.Get("pw") ?? "invalid_pwd";
+            string reCAPTCHA = data.Get("g-recaptcha-response") ?? "invalid_recaptcha";
+
+            // validate reCAPTCHA if enabled
+            if(_conf.isRecaptchaEnabled()){
+               var isValid =  await AuthUtils.reCAPTCHA_isValid(reCAPTCHA, _conf.recaptchaServerKey);
+               if(!isValid) { await logon("reCAPTCHA invalid", user); return; }
+            }
             
             // validate password
             var _user = session_manager.userStore.GetUser(user);
@@ -48,7 +63,7 @@ namespace opcRESTconnector{
                 await logon("username or password invalid", user);
                 return;
             }
-
+            
             // delete the current session if any
             session_manager.Delete(HttpContext,"");
 
@@ -56,6 +71,8 @@ namespace opcRESTconnector{
             current_session["user"] = _user;
             HttpContext.Redirect("/",303);
         }
+
+        
         
         [Route(HttpVerbs.Get, BaseRoutes.logout)]
         public Task logout(){

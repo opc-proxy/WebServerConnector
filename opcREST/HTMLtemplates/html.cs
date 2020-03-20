@@ -1,9 +1,11 @@
 
+using System;
+using System.Linq;
 
 namespace opcRESTconnector{
 
     public class HTMLtemplates{
-        public static string loginPage(string token, string message, string user=""){
+        public static string loginPage(string token, string message, string user="", string recaptchaClientKey =""){
             return $@"
             <!DOCTYPE html>
             <html lang='en'>
@@ -12,6 +14,11 @@ namespace opcRESTconnector{
                 <meta name='viewport' content='width=device-width, initial-scale=1.0'>
                 <meta http-equiv='X-UA-Compatible' content='ie=edge'>
                 <link rel='icon' href='https://avatars0.githubusercontent.com/u/52571081?s=200&v=4'>
+                {(
+                    recaptchaClientKey != "" ?
+                    "<script src='https://www.google.com/recaptcha/api.js' async defer></script>" :
+                    ""
+                )}
                 <title>login</title>
                 {CSStemplates.normalize}
             </head>
@@ -22,6 +29,7 @@ namespace opcRESTconnector{
                   method='post'>
                     <input type='text' placeholder='username' name='user' value='{user}'>
                     <input type='password' placeholder='password' name='pw'>
+                    <div class='g-recaptcha' data-sitekey='{recaptchaClientKey}'></div>
                     <input type='submit' value='Submit'>
                     <input type='hidden' value='{token}' name='_csrf'>
                 </form>
@@ -79,6 +87,23 @@ namespace opcRESTconnector{
                 </html>
                 ";
         }
+
+
+/*      // test of syntax
+  public static string test(bool b){
+            return $@"
+                { (b ? 
+                    "ciao" 
+                  : "bau"
+                )}
+                {
+                    string.Join("\n", 
+                        Enumerable.Range(1, 4).Select(num => "<div> " + num + " </div>").ToArray()
+                    )
+                }
+            ";
+        }*/
+
     }
 
 }

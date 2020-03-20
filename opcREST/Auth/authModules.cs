@@ -2,6 +2,7 @@ using System.Text;
 using System.Threading.Tasks;
 using EmbedIO;
 using System;
+using System.Net;
 using System.Security.Cryptography;
 using System.Collections.Generic;
 using EmbedIO.Routing;
@@ -10,6 +11,8 @@ using EmbedIO.WebApi;
 using Newtonsoft.Json.Linq;
 using opcRESTconnector.Session;
 using NLog;
+using System.Net.Http.Headers ;
+using System.Net.Http;
 
 namespace opcRESTconnector {
 
@@ -54,6 +57,25 @@ namespace opcRESTconnector {
             context.Response.StatusCode = 403;
             context.SetHandled();
             return context.SendStringAsync(HTMLtemplates.forbidden(redirectURL),"text/html",Encoding.UTF8);
+        }
+
+        public static async Task<bool> reCAPTCHA_isValid(string recaptcha, string serverKey){
+            var query = new Dictionary<string, string>
+            {
+                { "secret", serverKey },
+                { "response", recaptcha}
+            };
+            var http = new HttpClient();
+            var Req = new FormUrlEncodedContent(query);
+            var response = await http.PostAsync("https://www.google.com/recaptcha/api/siteverify", Req);
+            var body = await response.Content.ReadAsStringAsync() ;
+            try{
+                var result = JObject.Parse(await response.Content.ReadAsStringAsync()).ToObject<reCATPCHAresp>();
+                return result.success;
+            }
+            catch{
+                return false;
+            }
         }
     }
 

@@ -3,6 +3,7 @@ using EmbedIO;
 using EmbedIO.Files;
 using EmbedIO.WebApi;
 using System;
+using System.Text;
 using System.IO;
 using OpcProxyCore;
 using opcRESTconnector.Session;
@@ -67,13 +68,8 @@ namespace opcRESTconnector {
             return url;
         }
         private static async Task customHttpErrorCallback (IHttpContext ctx, IHttpException ex) {
-
             ctx.Response.StatusCode = ex.StatusCode;
 
-            foreach (var item in ctx.Route.Keys){
-                Console.WriteLine(item);
-
-            }
             if(ctx.Request.RawUrl.Contains("api")){
                 switch (ex.StatusCode) {
                     case 401:

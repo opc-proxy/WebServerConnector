@@ -35,9 +35,22 @@ namespace opcRESTconnector
         {
             try{        
                 _conf = config.ToObject<RESTconfigsWrapper>().RESTapi;
-                if(!_conf.serverLog) Swan.Logging.Logger.UnregisterLogger<ConsoleLogger>();
+                if(!_conf.serverLog) {
+                    try { Swan.Logging.Logger.UnregisterLogger<ConsoleLogger>();  }
+                    catch { /* in case of multiple instance they seems to share Swan logging and this throws */ }
+                }
                 server = HTTPServerBuilder.CreateWebServer(_conf,manager);
+                
+                // mainly used in case of port already in use
+                server.StateChanged += (s, e) => {
+                    if(e.NewState == WebServerState.Stopped) {
+                        // logger.Fatal("Webserver stopped: probably port " + _conf.port + " is already in use");
+                        cts.Cancel();
+                    }
+                };
+
                 server.RunAsync(cts.Token);
+
                 // Bug in SWAN: https://github.com/unosquare/swan/issues/107
                 Console.CursorVisible = true;
             }

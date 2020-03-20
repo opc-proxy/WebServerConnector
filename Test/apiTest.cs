@@ -33,7 +33,8 @@ namespace Test
                     },
 
                     'RESTapi': {
-                        port : 8087,
+                        serverLog:false,
+                        port : 8089,
                         urlPrefix : '',
                         enableBasicAuth : false,
                         enableStaticFiles : false,
@@ -75,16 +76,16 @@ namespace Test
         public async void StaticFiles()
         {
             // Should not provide static files
-            var errorResponse = await http.GetAsync("http://localhost:8087/");
+            var errorResponse = await http.GetAsync("http://localhost:8089/");
             Assert.Equal(System.Net.HttpStatusCode.NotFound, errorResponse.StatusCode);
 
-            errorResponse = await http.GetAsync("http://localhost:8087/index.html");
+            errorResponse = await http.GetAsync("http://localhost:8089/index.html");
             Assert.Equal(System.Net.HttpStatusCode.NotFound, errorResponse.StatusCode);
 
-            errorResponse = await http.GetAsync("http://localhost:8087/API");
+            errorResponse = await http.GetAsync("http://localhost:8089/API");
             Assert.Equal(System.Net.HttpStatusCode.NotFound, errorResponse.StatusCode);
 
-            errorResponse = await http.GetAsync("http://localhost:8087/api");
+            errorResponse = await http.GetAsync("http://localhost:8089/api");
             Assert.Equal(System.Net.HttpStatusCode.NotFound, errorResponse.StatusCode);
 
         }
@@ -92,8 +93,8 @@ namespace Test
         [Fact]
         public async void restGET()
         {
-            var response = await http.GetAsync("http://localhost:8087/api/REST/MyVariable");
-            var errorResponse = await http.GetAsync("http://localhost:8087/api/REST/MyVaria");
+            var response = await http.GetAsync("http://localhost:8089/api/REST/MyVariable");
+            var errorResponse = await http.GetAsync("http://localhost:8089/api/REST/MyVaria");
             
             // Variable exist is success
             Assert.True(response.IsSuccessStatusCode);
@@ -126,7 +127,7 @@ namespace Test
             };
 
             var goodReq = new FormUrlEncodedContent(query);
-            var response = await http.PostAsync("http://localhost:8087/api/REST/MyVariable", goodReq);
+            var response = await http.PostAsync("http://localhost:8089/api/REST/MyVariable", goodReq);
             var body = JObject.Parse(await response.Content.ReadAsStringAsync()).ToObject<WriteResponse>();
 
             // If variable exist and api key provided then success
@@ -135,7 +136,7 @@ namespace Test
             Assert.Equal("none", body.ErrorMessage);
 
             // Variable does not exist
-            response = await http.PostAsync("http://localhost:8087/api/REST/MyVarable", goodReq);
+            response = await http.PostAsync("http://localhost:8089/api/REST/MyVarable", goodReq);
             body = JObject.Parse(await response.Content.ReadAsStringAsync()).ToObject<WriteResponse>();
             Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
             Assert.True(body.IsError);
@@ -147,7 +148,7 @@ namespace Test
                 { "apiKey", "popo" }
             };
             var badReq = new FormUrlEncodedContent(query2);
-            response = await http.PostAsync("http://localhost:8087/api/REST/MyVariable", badReq);
+            response = await http.PostAsync("http://localhost:8089/api/REST/MyVariable", badReq);
             var body2 = JObject.Parse(await response.Content.ReadAsStringAsync()).ToObject<httpErrorData>();
             Assert.Equal(System.Net.HttpStatusCode.Forbidden, response.StatusCode);
             Assert.Equal("Forbidden", body2.Error);
@@ -158,7 +159,7 @@ namespace Test
                 { "apiKey", "pippo" }
             };
             var badReq3 = new FormUrlEncodedContent(query3);
-            response = await http.PostAsync("http://localhost:8087/api/REST/MyVariable", badReq3);
+            response = await http.PostAsync("http://localhost:8089/api/REST/MyVariable", badReq3);
             var body3 = JObject.Parse(await response.Content.ReadAsStringAsync()).ToObject<WriteResponse>();
             Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
             Assert.Equal("Not Found", body3.ErrorMessage);
@@ -169,7 +170,7 @@ namespace Test
             
             // Success if all is good
             var  Req = new StringContent("{names:['MyVariable'], apiKey:'pippo'}", Encoding.UTF8, "application/json");
-            var response = await http.PostAsync("http://localhost:8087/api/JSON/read", Req);
+            var response = await http.PostAsync("http://localhost:8089/api/JSON/read", Req);
 
             Assert.True(response.IsSuccessStatusCode);
             ReadResponse resp = JObject.Parse(await response.Content.ReadAsStringAsync()).ToObject<ReadResponse>();
@@ -179,7 +180,7 @@ namespace Test
 
             // one var not found but still returning the other
             Req = new StringContent("{names:['MyVariable','notExist'], apiKey:'pippo'}", Encoding.UTF8, "application/json");
-            response = await http.PostAsync("http://localhost:8087/api/JSON/read", Req);
+            response = await http.PostAsync("http://localhost:8089/api/JSON/read", Req);
             
             Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
             resp = JObject.Parse(await response.Content.ReadAsStringAsync()).ToObject<ReadResponse>();
@@ -188,7 +189,7 @@ namespace Test
 
             // fail if apiKey not provided
             Req = new StringContent("{names:['MyVariable'], apiKey:'pipo'}", Encoding.UTF8, "application/json");
-            response = await http.PostAsync("http://localhost:8087/api/JSON/read", Req);
+            response = await http.PostAsync("http://localhost:8089/api/JSON/read", Req);
 
             Assert.Equal(System.Net.HttpStatusCode.Forbidden, response.StatusCode);
             var resp2 = JObject.Parse(await response.Content.ReadAsStringAsync()).ToObject<httpErrorData>();
@@ -200,7 +201,7 @@ namespace Test
         {
             // Success if all is good
             var  Req = new StringContent("{name:'MyVariable', apiKey:'pippo', value:32}", Encoding.UTF8, "application/json");
-            var response = await http.PostAsync("http://localhost:8087/api/JSON/write", Req);
+            var response = await http.PostAsync("http://localhost:8089/api/JSON/write", Req);
             var resp = JObject.Parse(await response.Content.ReadAsStringAsync()).ToObject<WriteResponse>();
 
             Assert.True(response.IsSuccessStatusCode);
@@ -209,24 +210,24 @@ namespace Test
 
             // not found if var does not exist
             Req = new StringContent("{name:'MyVaable', apiKey:'pippo', value:32}", Encoding.UTF8, "application/json");
-            response = await http.PostAsync("http://localhost:8087/api/JSON/write", Req);
+            response = await http.PostAsync("http://localhost:8089/api/JSON/write", Req);
             Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
 
             // bad req if value not provided
             Req = new StringContent("{name:'MyVariable', apiKey:'pippo'}", Encoding.UTF8, "application/json");
-            response = await http.PostAsync("http://localhost:8087/api/JSON/write", Req);
+            response = await http.PostAsync("http://localhost:8089/api/JSON/write", Req);
             Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
 
             // Error if value not right type
             Req = new StringContent("{name:'MyVariable', apiKey:'pippo', value:'pollo'}", Encoding.UTF8, "application/json");
-            response = await http.PostAsync("http://localhost:8087/api/JSON/write", Req);
+            response = await http.PostAsync("http://localhost:8089/api/JSON/write", Req);
             resp = JObject.Parse(await response.Content.ReadAsStringAsync()).ToObject<WriteResponse>();
             Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
             Assert.True(resp.IsError);
 
             // Forbidden if wrong apiKey
             Req = new StringContent("{name:'MyVariable', apiKey:'pppo', value:'7'}", Encoding.UTF8, "application/json");
-            response = await http.PostAsync("http://localhost:8087/api/JSON/write", Req);
+            response = await http.PostAsync("http://localhost:8089/api/JSON/write", Req);
             var resp2 = JObject.Parse(await response.Content.ReadAsStringAsync()).ToObject<httpErrorData>();
             Assert.Equal(System.Net.HttpStatusCode.Forbidden, response.StatusCode);
             Assert.True(resp2.Error == "Forbidden");

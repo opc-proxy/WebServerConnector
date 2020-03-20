@@ -40,7 +40,12 @@ namespace opcRESTconnector
         public List<List<string>> userAuth {get; set;}
         public string staticFilesPath {get; set;}
         public bool serverLog {get; set;}
+        public string recaptchaClientKey{get; set;}
+        public string recaptchaServerKey{get; set;}
 
+        public bool isRecaptchaEnabled(){
+            return (recaptchaClientKey != "" && recaptchaServerKey !="");
+        }
 
         public RESTconfigs(){
             apyKey = "";
@@ -58,6 +63,8 @@ namespace opcRESTconnector
             sessionExpiryHours = 720;
             writeExpiryMinutes = 30;
             serverLog = true;
+            recaptchaClientKey = "";
+            recaptchaServerKey = "";
         }
 
     }

@@ -12,7 +12,7 @@ namespace UserDataStore
         public void Initialize()
         {
             var empty_u = new UserData();
-            Assert.Equal("", empty_u.userName);
+            Assert.Equal("Anonymous", empty_u.userName);
             Assert.Equal(AuthRoles.Undefined, empty_u.role);
             Assert.False( empty_u.hasWriteRights());
             Assert.Equal("", empty_u.password.admin_default);
@@ -49,7 +49,6 @@ namespace UserDataStore
                             ['pino','123','R'],
                             ['gino','123','W'],
                             ['paul','123','A'],
-                            ['john','123','J']
                         ]
                     }
 
@@ -73,22 +72,18 @@ namespace UserDataStore
             var store = new UserStore(default_conf);
             var pino = store.GetUser("pino");
             var gino = store.GetUser("gino");
-            var john = store.GetUser("john");
             var none = store.GetUser("none");
 
             Assert.False(pino.hasWriteRights());
             Assert.False(gino.hasWriteRights());
-            Assert.False(john.hasWriteRights());
             Assert.False(none.hasWriteRights());
 
             Assert.True(pino.password.isValid("123"));
             Assert.True(gino.password.isValid("123"));
-            Assert.True(john.password.isValid("123"));
             Assert.False(none.password.isValid("123"));
 
             Assert.False(pino.AllowWrite(TimeSpan.FromHours(1)));
             Assert.True(gino.AllowWrite(TimeSpan.FromHours(1)));
-            Assert.False(john.AllowWrite(TimeSpan.FromHours(1)));
             Assert.False(none.AllowWrite(TimeSpan.FromHours(1)));
         }
     }

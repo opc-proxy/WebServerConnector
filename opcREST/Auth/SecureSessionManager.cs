@@ -8,6 +8,7 @@ using Jose;
 using System.Security.Cryptography;
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
+using opcRESTconnector.Data;
 using NLog;
 
 namespace opcRESTconnector.Session
@@ -16,7 +17,7 @@ namespace opcRESTconnector.Session
         private byte[] secret;
         public static NLog.Logger logger = null;
 
-        public UserStore userStore;
+        public DataStore userStore;
         
         public SecureSessionManager( RESTconfigs conf){
 
@@ -31,7 +32,7 @@ namespace opcRESTconnector.Session
 
             logger = LogManager.GetLogger(this.GetType().Name);
 
-            userStore = new UserStore(conf);
+            userStore = new DataStore(conf);
         }
         
         /// <summary>
@@ -45,7 +46,7 @@ namespace opcRESTconnector.Session
             var id = GetSessionId(context);
 
             SimpleSession session;
-            lock (_sessions)
+            lock (userStore)
             {
                 if (!string.IsNullOrEmpty(id) && _sessions.TryGetValue(id, out session))
                 {

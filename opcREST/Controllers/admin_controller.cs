@@ -55,7 +55,7 @@ namespace opcRESTconnector{
             }
             
             // validate password
-            var _user = session_manager.userStore.GetUser(user);
+            var _user = session_manager.userStore.users.Get(user);
             
             if( !_user.password.isValid(pw) ) {        
                 // set some session cookie for error display

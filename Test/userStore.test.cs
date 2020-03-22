@@ -3,6 +3,7 @@ using Xunit;
 using Newtonsoft.Json.Linq;
 using opcRESTconnector.Session;
 using opcRESTconnector;
+using opcRESTconnector.Data;
 
 namespace UserDataStore
 {
@@ -15,64 +16,101 @@ namespace UserDataStore
             Assert.Equal("Anonymous", empty_u.userName);
             Assert.Equal(AuthRoles.Undefined, empty_u.role);
             Assert.False( empty_u.hasWriteRights());
-            Assert.Equal("", empty_u.password.admin_default);
             Assert.True( empty_u.password.expiry.Ticks < DateTime.UtcNow.Ticks);
-            Assert.Equal("", empty_u.password.currentHash);
+            Assert.Null(empty_u.password.hashedValue);
             Assert.False(empty_u.password.isValid(""));
         }
 
         [Fact]
         public void Methods()
         {
-            var user = new UserData{
-                userName = "pino",
-                role = AuthRoles.Reader,
-                password = new Password("123",10)
-            };
-
+            var user = new UserData("pino","123",AuthRoles.Reader, 1);
+            Assert.False(user.isActive());
+            Assert.False(user.password.isValid("123"));
+            user.password.update_password("123","1234",1);
+            Assert.True(user.password.IsActive());
+            Assert.True(user.isActive());
             Assert.False(user.hasWriteRights());
             user.AllowWrite(new TimeSpan(10,0,0,0));
             Assert.False(user.hasWriteRights());
             user.role = AuthRoles.Writer;
             user.AllowWrite(new TimeSpan(10,0,0,0));
             Assert.True(user.hasWriteRights());
-            Assert.True(user.password.isValid("123"));
+            Assert.False(user.password.isValid("123"));
+            Assert.True(user.password.isValid("1234"));
         }
     }
-    public class UserStoreTest{
+    public class DataStoreTest{
         public RESTconfigs default_conf;
-        public UserStoreTest(){
-            string data = @"
-                {
-                    'RESTapi': {
-                         userAuth : [
-                            ['pino','123','R'],
-                            ['gino','123','W'],
-                            ['paul','123','A'],
-                        ]
-                    }
+        DataStore store;
+        string session_id;
+        public DataStoreTest(){
+            
+            default_conf = new RESTconfigs();
 
-            }";
-            default_conf = JObject.Parse(data).ToObject<RESTconfigsWrapper>().RESTapi;
+            store = new DataStore(default_conf);
+            var pino = new UserData {
+                userName = "pino",
+                password = new Password("123",1),
+                role = AuthRoles.Reader,
+                activity_expiry = DateTime.UtcNow.AddDays(1)
+            };
+            var gino = new UserData {
+                userName = "gino",
+                password = new Password("123",1),
+                role = AuthRoles.Writer,
+                activity_expiry = DateTime.UtcNow.AddDays(1)
+            };
+
+            var session = new sessionData{
+                user = pino,
+                expiry = DateTime.UtcNow.AddDays(1)
+            };
+            store.users.Upsert(pino);
+            store.users.Upsert(gino);
+            session_id = store.sessions.Insert(session)?.AsString;
         }
+        
         [Fact]
         public void Initialize()
         {
-            var store = new UserStore(default_conf);
             Assert.NotNull(store);
-            var user = store.GetUser("pino");
+            var user = store.users.Get("pino");
+            var anonymous = store.users.Get("john");
             Assert.NotNull(user);
-            Assert.Equal("123",user.password.admin_default);
+            Assert.NotNull(anonymous);
+            Assert.Equal("Anonymous",anonymous.userName);
             Assert.Equal(AuthRoles.Reader, user.role);
             Assert.False(user.hasWriteRights());
+
+            // Session
+            var s = store.sessions.Get(session_id);
+            Assert.NotNull(s);
+            Assert.Equal("pino",s.user.userName);
+            
+            // Quick session
+            var session = new sessionData("gino", 1);
+            string s_name = store.sessions.Insert(session);
+            // does not modify gino's props
+            var gino = store.users.Get("gino");
+            Assert.True(gino.password.isValid("123"));
+            
+            var s2 = store.sessions.Get(s_name);
+            s2.expiry = DateTime.UtcNow.AddYears(1);
+            s2.user.role = AuthRoles.Undefined;
+            store.sessions.Update(s2);
+            // does not modify gino's props
+            // it should not is a NoSQL... But you never know
+            var gino2 = store.users.Get("gino");
+            Assert.Equal(AuthRoles.Writer, gino2.role);
+            Assert.NotNull(store.sessions.updateLastSeenIfExist(session_id));
         }
         [Fact]
         public void Methods()
         {
-            var store = new UserStore(default_conf);
-            var pino = store.GetUser("pino");
-            var gino = store.GetUser("gino");
-            var none = store.GetUser("none");
+            var pino = store.users.Get("pino");
+            var gino = store.users.Get("gino");
+            var none = store.users.Get("none");
 
             Assert.False(pino.hasWriteRights());
             Assert.False(gino.hasWriteRights());

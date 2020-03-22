@@ -42,6 +42,8 @@ namespace opcRESTconnector
         public bool serverLog {get; set;}
         public string recaptchaClientKey{get; set;}
         public string recaptchaServerKey{get; set;}
+        public string appStoreFileName{get; set;}
+        public bool recoveryMode{get;set;}
 
         public bool isRecaptchaEnabled(){
             return (recaptchaClientKey != "" && recaptchaServerKey !="");
@@ -65,6 +67,8 @@ namespace opcRESTconnector
             serverLog = true;
             recaptchaClientKey = "";
             recaptchaServerKey = "";
+            appStoreFileName = "webserver.data.db";
+            recoveryMode = false;
         }
 
     }

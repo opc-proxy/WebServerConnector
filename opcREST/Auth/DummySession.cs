@@ -2,22 +2,25 @@ using System;
 using System.Threading;
 using EmbedIO;
 using EmbedIO.Sessions;
+using opcRESTconnector.Data;
 
 namespace opcRESTconnector.Session{
 
+    /// <summary>
+    /// Dummy Session that allows the user to read and write at all times
+    /// </summary>
     public class DummySessionManager : ISessionManager
     {
-        UserStore users;
+        DataStore users;
         public DummySessionManager(RESTconfigs conf){
-            users = new UserStore(conf);
+            users = new DataStore(conf);
         }
         public ISession Create(IHttpContext context)
         {
             SimpleSession return_session = new SimpleSession();
             UserData _user = new UserData();
-            if( context.User!= null && context.User.Identity.IsAuthenticated ) {
-                    _user = users.GetUser(context.User.Identity.Name);
-            }
+            _user.role = AuthRoles.Writer;
+            _user.AllowWrite(TimeSpan.FromMinutes(3));
             return_session["user"] = _user;
             return_session.BeginUse();
             return return_session;        

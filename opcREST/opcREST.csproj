@@ -9,6 +9,7 @@
     <PackageReference Include="BCrypt.Net-Next" Version="3.3.3" />
     <PackageReference Include="EmbedIO" Version="3.4.3" />
     <PackageReference Include="jose-jwt" Version="2.5.0" />
+    <PackageReference Include="LiteDB" Version="5.0.4" />
     <PackageReference Include="opcProxy.core" Version="0.1.9" />
   </ItemGroup>
 

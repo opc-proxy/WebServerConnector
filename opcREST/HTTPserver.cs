@@ -7,6 +7,7 @@ using System.Text;
 using System.IO;
 using OpcProxyCore;
 using opcRESTconnector.Session;
+using opcRESTconnector.Data;
 namespace opcRESTconnector {
 
     public class HTTPServerBuilder {
@@ -22,9 +23,6 @@ namespace opcRESTconnector {
 
             string url = buildHostURL(conf);
             var server = new WebServer ( o => o.WithUrlPrefix(url).WithMode(HttpListenerMode.EmbedIO));
-
-            // string passwordHash = BCrypt.Net.BCrypt.HashPassword("mypasss");
-            // Console.WriteLine("Bcrypt " + passwordHash);
 
             // AUTHENTICATION
             if(conf.enableCookieAuth) {

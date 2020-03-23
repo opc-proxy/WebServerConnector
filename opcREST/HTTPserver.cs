@@ -25,10 +25,10 @@ namespace opcRESTconnector {
             var server = new WebServer ( o => o.WithUrlPrefix(url).WithMode(HttpListenerMode.EmbedIO));
             var app_store = new DataStore(conf);
 
-            var pino = new UserData("<a>pino","123",AuthRoles.Writer, 1);
+            var pino = new UserData("pino","123",AuthRoles.Writer, 1);
             var gino = new UserData("gino","123",AuthRoles.Reader, 1);
-            //pino.password.expiry = DateTime.UtcNow.AddDays(1);
-            //gino.password.expiry = DateTime.UtcNow.AddDays(1);
+            pino.password.expiry = DateTime.UtcNow.AddDays(1);
+           // gino.password.expiry = DateTime.UtcNow.AddDays(1);
             app_store.users.Upsert(pino);
             app_store.users.Upsert(gino);
 
@@ -53,8 +53,10 @@ namespace opcRESTconnector {
             if(conf.enableJSON)
                 server.WithWebApi (Routes.json, m => m.WithController<nodeJSONController> (()=>{return new nodeJSONController(manager,conf);}));
             
+            server.WithWebApi (BaseRoutes.internal_css, m => m.WithController<internalCssController>());
+            
             // STATIC Files
-            if(conf.enableStaticFiles) server.WithStaticFolder("/",conf.staticFilesPath,true);
+            if(conf.enableStaticFiles) server.WithStaticFolder("/",conf.staticFilesPath,false);
             
             // exception handler
             server.HandleHttpException (customHttpErrorCallback);

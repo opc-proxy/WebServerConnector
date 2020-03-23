@@ -6,6 +6,7 @@ namespace opcRESTconnector {
         public const string write_access = "/write_access";
         public const string update_pw = "/update_pw";
         public const string api = "/api";
+        public const string internal_css = "/_css";
     }
 
     public class Routes{

@@ -16,6 +16,7 @@ namespace opcRESTconnector{
                 <meta name='viewport' content='width=device-width, initial-scale=1.0'>
                 <meta http-equiv='X-UA-Compatible' content='ie=edge'>
                 <link rel='icon' href='https://avatars0.githubusercontent.com/u/52571081?s=200&v=4'>
+                <style>{CSStemplates.layout}</style>
                 {(
                     recaptchaClientKey != "" ?
                     "<script src='https://www.google.com/recaptcha/api.js' async defer></script>" :
@@ -25,17 +26,25 @@ namespace opcRESTconnector{
                 {CSStemplates.normalize}
             </head>
             <body>
-                <h1>{message}</h1>
-                <form ref='loginForm' 
-                  action='{Routes.login}' 
-                  method='post'>
-                    <input type='text' placeholder='username' name='user' value='{user}'>
-                    <input type='password' placeholder='password' name='pw'>
-                    <div class='g-recaptcha' data-sitekey='{recaptchaClientKey}'></div>
-                    <input type='submit' value='Submit'>
-                    <input type='hidden' value='{token}' name='_csrf'>
-                </form>
-                <a href='/admin/write_access'> write access </a>
+                <div class='container'>
+                    <div class='filler'> </div>
+                    <h3 style='align-self:center;'>OPC-Proxy <strong> <a>Login</a></strong></h3>
+                    <div class='box'>
+                        <form class='flexcolumn' ref='loginForm' 
+                        action='{Routes.login}' 
+                        method='post'>
+                        <h6 style='color:rebeccapurple;'>{message}</h6>
+                            <label>Username</label>
+                            <input type='text' placeholder='username' name='user' value='{user}'>
+                            <label>Password</label>
+                            <input type='password' placeholder='password' name='pw'>
+                            <div class='g-recaptcha' data-sitekey='{recaptchaClientKey}'></div>
+                            <input type='hidden' value='{token}' name='_csrf'>
+                            <input type='submit' value='Submit' style='align-self: flex-end; margin-top:3rem;'>
+                        </form>
+                    </div>
+                <div class='filler'> </div>
+            </div>
             </body>
             </html>
             ";
@@ -75,21 +84,28 @@ namespace opcRESTconnector{
                     <meta http-equiv='X-UA-Compatible' content='ie=edge'>
                     <link rel='icon' href='https://avatars0.githubusercontent.com/u/52571081?s=200&v=4'>
                     <title>login</title>
+                    <style>{CSStemplates.layout}</style>
                     {CSStemplates.normalize}
                 </head>
                 <body>
-                    <h1>Password update required for user: {user}</h1>
-                    <h3>{error}</h3>
-                    <form ref='loginForm' 
+                <div class='container'>
+                    <div class='filler'> </div>
+                    <h3 style='align-self:center;'>Password update required for user: <strong style='margin-left:1rem;'><a>{user}</strong></a></h3>
+                    <div class='box'>
+                    <form class='flexcolumn' ref='loginForm' 
                     action='{Routes.update_pw}' 
                     method='post'>
+                        <h6 style='color:rebeccapurple'>{error}</h6>
                         <label> Current password:</label>
                         <input type='password' placeholder='old password' name='old_pw'>
                         <label> New password:</label>
                         <input type='password' placeholder='new password' name='new_pw'>
-                        <input type='submit' value='Submit'>
+                        <input type='submit' value='Submit' style='align-self: flex-end; margin-top:2rem;'>
                         <input type='hidden' value='{token}' name='_csrf'>
                     </form>
+                    </div>
+                    <div class='filler'> </div>
+                </div>
                 </body>
                 </html>
                 ";
@@ -109,18 +125,26 @@ namespace opcRESTconnector{
                     <link rel='icon' href='https://avatars0.githubusercontent.com/u/52571081?s=200&v=4'>
                     <title>login</title>
                     {CSStemplates.normalize}
+                    <style>{CSStemplates.layout}</style>
                 </head>
                 <body>
-                    <h1>Request Write Access for user: {user}</h1>
-                    <h3>{error}</h3>
-                    <form ref='loginForm' 
+                <div class='container'>
+                    <div class='filler'> </div>
+                    <h3 style='align-self:center;'>Request Write Access for user: <strong style='margin-left:1rem;'><a>{user}</strong></a></h3>
+                    <div class='box'>
+                    <form class='flexcolumn' ref='loginForm' 
                     action='{Routes.write_access}' 
                     method='post'>
+                        <h6 style='color:rebeccapurple'>{error}</h6>
+                        <label>Password</label>
                         <input type='password' placeholder='password' name='pw'>
-                        <input type='submit' value='Submit'>
+                        <input type='submit' value='Submit' style='align-self: flex-end; margin-top:2rem;'>
                         <input type='hidden' value='{token}' name='_csrf'>
                         <input type='hidden' value='{referrer}' name='_referrer'>
                     </form>
+                    </div>
+                    <div class='filler'> </div>
+                </div>
                 </body>
                 </html>
                 ";

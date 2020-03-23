@@ -14,11 +14,9 @@ namespace opcRESTconnector.Data
             var admin = _collection.FindOne(x => x.userName == "admin");
             // create Admin user if not exist
             if(admin == null) {
-                admin = new UserData(){
-                    userName = "admin",
-                    password = new Password("admin",0),
-                    role = AuthRoles.Admin
-                };
+                admin = new UserData("admin","admin",AuthRoles.Admin, 1 );
+                admin.activity_expiry =  DateTime.MaxValue; // admin is always active, but password expires
+                _collection.Insert(admin);
             }
             // Reset password if in recovery mode
             else if(recoveryMode){
@@ -57,5 +55,6 @@ namespace opcRESTconnector.Data
         public override bool Update(UserData data){
             return _collection.Update(data);
         }
+        
     }
 }

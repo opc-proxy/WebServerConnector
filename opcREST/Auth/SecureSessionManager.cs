@@ -10,6 +10,8 @@ using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 using opcRESTconnector.Data;
 using NLog;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace opcRESTconnector.Session
 {
@@ -17,9 +19,11 @@ namespace opcRESTconnector.Session
         private byte[] secret;
         public static NLog.Logger logger = null;
 
-        public DataStore userStore;
+        public DataStore store;
+
+        private RESTconfigs _conf;
         
-        public SecureSessionManager( RESTconfigs conf){
+        public SecureSessionManager( RESTconfigs conf, DataStore app_store){
 
             secret = new byte[32];
             var rnd = new RNGCryptoServiceProvider();
@@ -32,7 +36,8 @@ namespace opcRESTconnector.Session
 
             logger = LogManager.GetLogger(this.GetType().Name);
 
-            userStore = new DataStore(conf);
+            store = app_store;
+            _conf = conf;
         }
         
         /// <summary>
@@ -45,17 +50,16 @@ namespace opcRESTconnector.Session
             logger.Debug("entered in create");
             var id = GetSessionId(context);
 
-            SimpleSession session;
-            lock (userStore)
+            SimpleSession session = new SimpleSession();
+            lock (store)
             {
-                if (!string.IsNullOrEmpty(id) && _sessions.TryGetValue(id, out session))
-                {
-                    session.BeginUse();
-                    logger.Debug("Session Found");
-                    logger.Debug("There are in total sessions : " + _sessions.Count);
-
-                }
-                else session = new SimpleSession();
+                if (string.IsNullOrEmpty(id)) return session;
+                var db_session = store.sessions.GetAndUpdateLastSeen(id);
+                if(db_session == null) return session;
+                
+                logger.Debug("Session Found");
+                session = new SimpleSession(db_session);
+                session.BeginUse();
             }
             return session;
         }
@@ -66,15 +70,13 @@ namespace opcRESTconnector.Session
             return AuthenticateCookie(cookieValue);
         }
 
-        public SimpleSession RegisterSession(IHttpContext context){
+        public SimpleSession RegisterSession(IHttpContext context, UserData user){
             logger.Debug("Registering Session");
-
-            string id = UniqueIdGenerator.GetNext();
-            SimpleSession session;
-            lock (_sessions) {    
-                session = new SimpleSession(id, SessionDuration);
-                _sessions.TryAdd(id, session);
-            }
+            var db_session = new sessionData(user, _conf.sessionExpiryHours / 24);
+            string id = store.sessions.Insert(db_session);
+            if(String.IsNullOrEmpty(id)) return new SimpleSession();
+            
+            var session =  new SimpleSession(db_session);
             var cookie = createSecureCookie(id);
             context.Request.Cookies.Add(cookie);
             context.Response.Cookies.Add(cookie);
@@ -112,27 +114,39 @@ namespace opcRESTconnector.Session
             RemoveSession(context);
         }
 
-        public SimpleSession RemoveSession(IHttpContext context){
+        public string RemoveSession(IHttpContext context){
 
             var id = GetSessionId(context);
 
-            var return_session = new SimpleSession();
-            if (string.IsNullOrEmpty(id))  return return_session;
-
-            lock (_sessions)
-            {
-                if (_sessions.TryGetValue(id, out var session)){
-                    session.EndUse(() => { });
-                    _sessions.TryRemove(id, out return_session); 
-                    logger.Debug("Session Removed : " + return_session.Id );
-                }
+            if( store.sessions.DeletFromId(id) ) {
+                logger.Debug("Session Removed : " + id );
             }
-            
+            else {
+                logger.Debug("Session Not Found : " + id );
+            }
             context.Request.Cookies.Add(BuildSessionCookie(string.Empty));
             context.Response.Cookies.Add(BuildSessionCookie(string.Empty));
-            return return_session;
+            return id;
         }
 
+        public override void Start(CancellationToken cancellationToken)
+        {
+            Task.Run(async () =>
+            {
+                try
+                {
+                    while (!cancellationToken.IsCancellationRequested)
+                    {
+                        store.sessions.PurgeExpired();
+                        await Task.Delay(PurgeInterval, cancellationToken).ConfigureAwait(false);
+                    }
+                }
+                catch (TaskCanceledException)
+                {
+                    // ignore
+                }
+            }, cancellationToken);
+        }
     }
 
     public class jwtPayload{

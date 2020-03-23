@@ -18,9 +18,10 @@ namespace opcRESTconnector.Session{
         public ISession Create(IHttpContext context)
         {
             SimpleSession return_session = new SimpleSession();
-            UserData _user = new UserData();
-            _user.role = AuthRoles.Writer;
-            _user.AllowWrite(TimeSpan.FromMinutes(3));
+            // Hack the system! building dummy user that can Read and Write, always.
+            UserData _user = new UserData("Anonymous","none",AuthRoles.Writer,1);
+            _user.password.expiry = DateTime.UtcNow.AddMinutes(1);
+            _user.write_expiry = DateTime.UtcNow.AddMinutes(1);
             return_session["user"] = _user;
             return_session.BeginUse();
             return return_session;        

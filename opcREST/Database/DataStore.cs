@@ -15,10 +15,9 @@ namespace opcRESTconnector.Data{
             
             _conf = config;
             db    = new LiteDatabase(@config.appStoreFileName);
-
             users = new userCollection(db,config.recoveryMode);
-            
             sessions = new sessionCollection(db);
+
         }       
     }
 }

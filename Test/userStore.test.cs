@@ -25,16 +25,18 @@ namespace UserDataStore
         public void Methods()
         {
             var user = new UserData("pino","123",AuthRoles.Reader, 1);
-            Assert.False(user.isActive());
-            Assert.False(user.password.isValid("123"));
+            Assert.True(user.isActive());
+            Assert.False(user.password.isActive());
+            // user password is expired, but still can validate
+            Assert.True(user.password.isValid("123"));
             user.password.update_password("123","1234",1);
-            Assert.True(user.password.IsActive());
+            Assert.True(user.password.isActive());
             Assert.True(user.isActive());
             Assert.False(user.hasWriteRights());
-            user.AllowWrite(new TimeSpan(10,0,0,0));
+            user.AllowWrite("1234",1);
             Assert.False(user.hasWriteRights());
             user.role = AuthRoles.Writer;
-            user.AllowWrite(new TimeSpan(10,0,0,0));
+            user.AllowWrite("1234",1);
             Assert.True(user.hasWriteRights());
             Assert.False(user.password.isValid("123"));
             Assert.True(user.password.isValid("1234"));
@@ -62,13 +64,12 @@ namespace UserDataStore
                 activity_expiry = DateTime.UtcNow.AddDays(1)
             };
 
-            var session = new sessionData{
-                user = pino,
-                expiry = DateTime.UtcNow.AddDays(1)
-            };
+            var session = new sessionData(pino,1);
             store.users.Upsert(pino);
             store.users.Upsert(gino);
             session_id = store.sessions.Insert(session)?.AsString;
+            string session_id2 = store.sessions.Insert(session);
+            Assert.Null(session_id2);
         }
         
         [Fact]
@@ -89,10 +90,10 @@ namespace UserDataStore
             Assert.Equal("pino",s.user.userName);
             
             // Quick session
-            var session = new sessionData("gino", 1);
+            var session = new sessionData(user, 1);
             string s_name = store.sessions.Insert(session);
             // does not modify gino's props
-            var gino = store.users.Get("gino");
+            var gino = store.users.Get("pino");
             Assert.True(gino.password.isValid("123"));
             
             var s2 = store.sessions.Get(s_name);
@@ -101,9 +102,9 @@ namespace UserDataStore
             store.sessions.Update(s2);
             // does not modify gino's props
             // it should not is a NoSQL... But you never know
-            var gino2 = store.users.Get("gino");
-            Assert.Equal(AuthRoles.Writer, gino2.role);
-            Assert.NotNull(store.sessions.updateLastSeenIfExist(session_id));
+            var gino2 = store.users.Get("pino");
+            Assert.Equal(AuthRoles.Reader, gino2.role);
+            Assert.NotNull(store.sessions.GetAndUpdateLastSeen(session_id));
         }
         [Fact]
         public void Methods()
@@ -120,9 +121,9 @@ namespace UserDataStore
             Assert.True(gino.password.isValid("123"));
             Assert.False(none.password.isValid("123"));
 
-            Assert.False(pino.AllowWrite(TimeSpan.FromHours(1)));
-            Assert.True(gino.AllowWrite(TimeSpan.FromHours(1)));
-            Assert.False(none.AllowWrite(TimeSpan.FromHours(1)));
+            Assert.Equal( UsrStatusCodes.NotAuthorized,pino.AllowWrite("123",1));
+            Assert.Equal(UsrStatusCodes.Success, gino.AllowWrite("123",1));
+            Assert.Equal(UsrStatusCodes.ExpiredUsr, none.AllowWrite("123",1));
         }
     }
 

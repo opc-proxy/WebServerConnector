@@ -3,16 +3,10 @@ using System.Threading.Tasks;
 using System.Threading;
 using Xunit;
 using opcRESTconnector;
-using opcRESTconnector.Session;
 using OpcProxyCore;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Text;
-using System.Net.Http.Headers ;
-using System.Net;
 using System.Diagnostics;
+using LiteDB;
 
 namespace Test
 {
@@ -38,6 +32,7 @@ namespace Test
                         'serverLog' : false,
                         'enableCookieAuth' : true,
                         'writeExpiryMinutes' : 0.015,
+                        'appStoreFileName':'cookifile.data',
                         userAuth : [
                             ['pino','123','W'],
                             ['gino','123','R'],
@@ -89,6 +84,7 @@ namespace Test
             process.BeginErrorReadLine();
             process.WaitForExit();
             Console.WriteLine("done");
+            
         }
     }
 }

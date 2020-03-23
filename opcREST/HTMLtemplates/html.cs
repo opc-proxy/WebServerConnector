@@ -6,6 +6,8 @@ namespace opcRESTconnector{
 
     public class HTMLtemplates{
         public static string loginPage(string token, string message, string user="", string recaptchaClientKey =""){
+            Utils.HTTPescape(ref message);
+            Utils.HTTPescape(ref user);
             return $@"
             <!DOCTYPE html>
             <html lang='en'>
@@ -40,6 +42,7 @@ namespace opcRESTconnector{
         }
 
         public static string forbidden(string redirectTo){
+            Utils.HTTPescape(ref redirectTo);
             return $@"
             <!DOCTYPE html>
             <html lang='en'>
@@ -49,6 +52,7 @@ namespace opcRESTconnector{
                 <meta http-equiv='X-UA-Compatible' content='ie=edge'>
                 <meta http-equiv='refresh' content='1; url={redirectTo}'>
                 <link rel='icon' href='https://avatars0.githubusercontent.com/u/52571081?s=200&v=4'>
+                {CSStemplates.normalize}
                 <title>Unauthorized</title>
             </head>
             <body>
@@ -59,8 +63,42 @@ namespace opcRESTconnector{
         }
 
     
+        public static string updatePW(string token, string user, string error = ""){
+            Utils.HTTPescape(ref user);
+            Utils.HTTPescape(ref error);
+            return $@"
+                <!DOCTYPE html>
+                <html lang='en'>
+                <head>
+                    <meta charset='UTF-8'>
+                    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                    <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+                    <link rel='icon' href='https://avatars0.githubusercontent.com/u/52571081?s=200&v=4'>
+                    <title>login</title>
+                    {CSStemplates.normalize}
+                </head>
+                <body>
+                    <h1>Password update required for user: {user}</h1>
+                    <h3>{error}</h3>
+                    <form ref='loginForm' 
+                    action='{Routes.update_pw}' 
+                    method='post'>
+                        <label> Current password:</label>
+                        <input type='password' placeholder='old password' name='old_pw'>
+                        <label> New password:</label>
+                        <input type='password' placeholder='new password' name='new_pw'>
+                        <input type='submit' value='Submit'>
+                        <input type='hidden' value='{token}' name='_csrf'>
+                    </form>
+                </body>
+                </html>
+                ";
+        }
 
         public static string writeAccess(string token, string user, string referrer="", string error =""){
+            Utils.HTTPescape(ref user);
+            Utils.HTTPescape(ref referrer);
+            Utils.HTTPescape(ref error);
             return $@"
                 <!DOCTYPE html>
                 <html lang='en'>

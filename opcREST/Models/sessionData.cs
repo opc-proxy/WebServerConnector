@@ -1,5 +1,7 @@
 using System;
 using LiteDB;
+using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace opcRESTconnector
 {
@@ -16,14 +18,15 @@ namespace opcRESTconnector
                 return this.expiry.ToUniversalTime();
             }
         }
+
         [BsonCtor]
         public sessionData(){
             user = new UserData("Anonymous");
             expiry = DateTime.UtcNow;
             last_seen = DateTime.UtcNow;
         }
-        public sessionData(string user_name , double expiry_days ){
-            user = new UserData(user_name);
+        public sessionData(UserData input_user , double expiry_days ){
+            user = input_user;
             expiry = DateTime.UtcNow.AddDays(expiry_days);
             last_seen = DateTime.UtcNow;
         }

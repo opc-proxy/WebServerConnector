@@ -8,14 +8,13 @@ using EmbedIO.Utilities;
 using EmbedIO.Sessions;
 using EmbedIO;
 using System.Collections.Generic;
+using opcRESTconnector.Data;
 
 namespace opcRESTconnector.Session {
 
-}
-
     public class SimpleSession : ISession
         {
-            private readonly Dictionary<string, object> _data = new Dictionary<string, object>(Session.KeyComparer);
+            private readonly Dictionary<string, object> _data = new Dictionary<string, object>(EmbedIO.Sessions.Session.KeyComparer);
 
             private int _usageCount;
             public bool isAnonymous;
@@ -35,6 +34,14 @@ namespace opcRESTconnector.Session {
                 LastActivity = DateTime.UtcNow;
                 _usageCount = 1;
                 isAnonymous = true;
+            }
+            public SimpleSession(sessionData data){
+                Id = data.Id.ToString();
+                long ticks = data.expiryUTC.Ticks - DateTime.UtcNow.Ticks;
+                Duration = TimeSpan.FromTicks( ticks > 0 ? ticks : 0 );
+                LastActivity = data.last_seen;
+                _usageCount = 1;
+                this["user"] = data.user;
             }
 
             public string Id { get; }
@@ -159,3 +166,4 @@ namespace opcRESTconnector.Session {
                     unregister();
             }
         }
+}

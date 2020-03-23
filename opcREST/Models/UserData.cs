@@ -1,7 +1,18 @@
 using LiteDB;
 using System;
+using System.Collections.Generic;
 
 namespace opcRESTconnector {
+
+    public enum UsrStatusCodes
+    {
+        Success,
+        ExpiredUsr,
+        WrongPW,
+        ExpiredPW,
+        NotAuthorized,
+        PasswordExist,
+    }
 
     /// <summary>
     /// Class that stores user session data
@@ -52,27 +63,29 @@ namespace opcRESTconnector {
         }
 
         public bool isActive(){
-            if(activity_expiry.ToUniversalTime().Ticks < DateTime.UtcNow.Ticks) return false;
-            if(!password.IsActive()) return false;
-            return true;
+            return (activity_expiry.ToUniversalTime().Ticks > DateTime.UtcNow.Ticks);
         }
 
-        public bool AllowWrite(TimeSpan duration){
-            if(!isActive()) return false;
+        public UsrStatusCodes AllowWrite(string pw, double duration_minutes){
+            if(!isActive()) return UsrStatusCodes.ExpiredUsr;
+            if(!password.isActive()) return UsrStatusCodes.ExpiredPW;
+            if(!password.isValid(pw)) return UsrStatusCodes.WrongPW;
 
             if(role == AuthRoles.Writer || role == AuthRoles.Admin){
-                write_expiry = DateTime.UtcNow.Add(duration);
-                return true;
+                write_expiry = DateTime.UtcNow.AddMinutes(duration_minutes);
+                return UsrStatusCodes.Success;
             } 
-            return false;
+            return UsrStatusCodes.NotAuthorized;
         }
         public bool hasWriteRights(){
             if(!isActive()) return false;
+            if(!password.isActive()) return false;
             return (write_expiry.ToUniversalTime().Ticks  > DateTime.UtcNow.Ticks);
         }
 
         public bool hasReadRights(){
             if(!isActive()) return false;
+            if(!password.isActive()) return false;
             return role != AuthRoles.Undefined;
         }
 
@@ -89,6 +102,7 @@ namespace opcRESTconnector {
     public class Password{
         public string hashedValue {get;set;}
         public DateTime expiry { get ; set ; }
+        public List<string> old_passwords {get; set;}
         public DateTime expiryUCT 
         {
             get { return this.expiry.ToUniversalTime(); }
@@ -97,29 +111,36 @@ namespace opcRESTconnector {
         public Password(){
             hashedValue = null; 
             expiry = DateTime.UtcNow;
+            old_passwords = new List<string>{};
         }
         public Password(string pwd , double duration_hours ){
             hashedValue = hash(pwd); 
             expiry = DateTime.UtcNow.Add(TimeSpan.FromHours(duration_hours)) ;
+            old_passwords = new List<string>{};
         }
         
-        public bool IsActive(){
+        public bool isActive(){
             return expiryUCT.Ticks > DateTime.UtcNow.Ticks;
         }
-        public string  update_password(string old_pwd, string new_pwd, double duration_hours){
-            if(String.IsNullOrEmpty(old_pwd) || String.IsNullOrEmpty(new_pwd)) return null;
-            if(String.IsNullOrEmpty(hashedValue)) return null;
+        public UsrStatusCodes  update_password(string old_pwd, string new_pwd, double duration_hours){
+            if(String.IsNullOrEmpty(old_pwd) || String.IsNullOrEmpty(new_pwd)) return UsrStatusCodes.WrongPW;
+            if(String.IsNullOrEmpty(hashedValue)) return UsrStatusCodes.NotAuthorized;
             if(BCrypt.Net.BCrypt.Verify(old_pwd,hashedValue))
             {
+                foreach (var pw in old_passwords)
+                {
+                    if(BCrypt.Net.BCrypt.Verify(new_pwd,pw)) return UsrStatusCodes.PasswordExist;
+                }
+                if(BCrypt.Net.BCrypt.Verify(new_pwd,hashedValue)) return UsrStatusCodes.PasswordExist;
+                old_passwords.Add(hashedValue);
                 hashedValue = hash(new_pwd);
                 expiry = DateTime.UtcNow.Add(TimeSpan.FromHours(duration_hours)) ;
-                return hashedValue;
+                return UsrStatusCodes.Success;
             }
-            else return null;
+            else return UsrStatusCodes.WrongPW;
         }
         public bool isValid(string pwd){
             if(String.IsNullOrEmpty(pwd) || String.IsNullOrEmpty(hashedValue) ) return false;
-            if(expiryUCT.Ticks < DateTime.UtcNow.Ticks) return false;
             return BCrypt.Net.BCrypt.Verify(pwd,hashedValue);
         }
         public string hash(string pwd){

@@ -180,7 +180,7 @@ namespace opcRESTconnector.Session
         private bool ConfigurationLocked { get; set; }
 
         /// <inheritdoc />
-        public void Start(CancellationToken cancellationToken)
+        public virtual void Start(CancellationToken cancellationToken)
         {
             ConfigurationLocked = true;
 

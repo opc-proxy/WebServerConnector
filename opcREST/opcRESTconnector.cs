@@ -56,6 +56,7 @@ namespace opcRESTconnector
             }
             catch(Exception ex){
                 logger.Error(ex.Message);
+                logger.Error(ex.StackTrace);
                 cts.Cancel();
                 // Bug in SWAN: https://github.com/unosquare/swan/issues/107
                 Console.CursorVisible = true;

@@ -7,6 +7,7 @@ using EmbedIO;
 using System;
 using OpcProxyCore;
 using opcRESTconnector.Session;
+using System.Net;
 
 namespace opcRESTconnector
 {
@@ -17,9 +18,9 @@ namespace opcRESTconnector
 
             foreach(var variable in values){
                 NodeValue val = new NodeValue();
-                val.Name = variable.name;
+                val.Name = HTTPescape(variable.name);
                 val.Type = variable.systemType.Substring(7).ToLower();
-                val.Value = variable.value;
+                val.Value = (variable.value.GetType() ==  typeof(String)) ? HTTPescape((string)variable.value) : variable.value; 
                 val.Timestamp = variable.timestamp.ToUniversalTime().ToString("o");
                 r.Nodes.Add(val);
             }
@@ -37,6 +38,13 @@ namespace opcRESTconnector
             ctx.Redirect(url,303);
             ctx.SetHandled();
             return Task.CompletedTask;
+        }
+
+        public static void HTTPescape(ref string input){
+            input = WebUtility.HtmlEncode(input);
+        }
+        public static string HTTPescape(string input){
+            return WebUtility.HtmlEncode(input);
         }
     }
 

@@ -23,15 +23,24 @@ namespace opcRESTconnector {
 
             string url = buildHostURL(conf);
             var server = new WebServer ( o => o.WithUrlPrefix(url).WithMode(HttpListenerMode.EmbedIO));
+            var app_store = new DataStore(conf);
+
+            var pino = new UserData("<a>pino","123",AuthRoles.Writer, 1);
+            var gino = new UserData("gino","123",AuthRoles.Reader, 1);
+            //pino.password.expiry = DateTime.UtcNow.AddDays(1);
+            //gino.password.expiry = DateTime.UtcNow.AddDays(1);
+            app_store.users.Upsert(pino);
+            app_store.users.Upsert(gino);
 
             // AUTHENTICATION
             if(conf.enableCookieAuth) {
                 // COOKIE BASED
-                SecureSessionManager cookieAuth = new SecureSessionManager(conf);
+                SecureSessionManager cookieAuth = new SecureSessionManager(conf, app_store);
                 var csrf = new CSRF_utils();
                 server.WithSessionManager(cookieAuth);
                 server.WithWebApi(BaseRoutes.admin, m => m.WithController<logonLogoffController>(()=>{return new logonLogoffController(cookieAuth,csrf,conf);}));
                 server.WithModule(new EnforceAuth());
+                server.WithModule(new EnforceActiveUser());
             }
             else {
                 DummySessionManager baseSession = new DummySessionManager(conf);

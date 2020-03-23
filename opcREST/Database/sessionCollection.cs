@@ -17,7 +17,11 @@ namespace opcRESTconnector.Data
         {
             return _collection.Delete(data.Id);
         }
-
+        public bool DeletFromId(string id){
+            if(String.IsNullOrEmpty(id)) return false;
+            var obi = new ObjectId(id);
+            return _collection.Delete(obi);
+        }
         public override sessionData Get(string id)
         {
             if(String.IsNullOrEmpty(id)) return null;
@@ -34,12 +38,10 @@ namespace opcRESTconnector.Data
         {
             if( String.IsNullOrEmpty(data?.user?.userName)) return null;
             try{
-                var o =  _collection.Insert(data);
-                Dictionary<string, string> jsondic = JsonConvert.DeserializeObject<Dictionary<string, string>>(o.ToString());
-                var bid = new BsonValue(jsondic["$oid"]);
-                return bid;
+                var b = _collection.Insert(data);
+                return data.Id.ToString();
             }
-            catch{
+            catch {
                 return BsonValue.Null;
             }
         }
@@ -57,11 +59,11 @@ namespace opcRESTconnector.Data
             return _collection.Update(data);
         }
         /// <summary>
-        /// Avoids the additional Get that is in Update, also avoid User retrival
+        /// Get the session and if exists it updates last seen
         /// </summary>
         /// <param name="s_Id"></param>
         /// <returns></returns>
-        public sessionData updateLastSeenIfExist(string s_Id){
+        public sessionData GetAndUpdateLastSeen(string s_Id){
             var s = Get(s_Id);
             if(s == null) return null;
             s.last_seen = DateTime.UtcNow;
@@ -72,6 +74,10 @@ namespace opcRESTconnector.Data
         public override void Upsert(sessionData data)
         {
             _collection.Upsert(data);
+        }
+
+        public void PurgeExpired(){
+            _collection.DeleteMany( x => (x.expiry.Ticks < DateTime.UtcNow.Ticks));
         }
     }
 }

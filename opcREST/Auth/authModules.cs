@@ -52,6 +52,21 @@ namespace opcRESTconnector {
         }
     }
 
+    public class EnforceActiveUser : WebModuleBase
+    {
+        public EnforceActiveUser() : base("/") {}
+        public override bool IsFinalHandler => false;
+
+        protected override Task OnRequestAsync(IHttpContext context)
+        {
+            UserData user = (UserData) context.Session["user"];
+            if(user == null) return AuthUtils.sendForbiddenTemplate(context);
+            if( !user.isActive() ) return AuthUtils.sendForbiddenTemplate(context);
+            if( !user.password.isActive() ) return Utils.HttpRedirect(context, Routes.update_pw);
+            return Task.CompletedTask;
+        }
+    }
+
     public class AuthUtils {
         public static Task sendForbiddenTemplate(IHttpContext context, string redirectURL = Routes.login){
             context.Response.StatusCode = 403;

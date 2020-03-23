@@ -4,6 +4,7 @@ namespace opcRESTconnector {
         public const string login = "/login";
         public const string logout = "/logout";
         public const string write_access = "/write_access";
+        public const string update_pw = "/update_pw";
         public const string api = "/api";
     }
 
@@ -14,6 +15,7 @@ namespace opcRESTconnector {
         public const string write_access = BaseRoutes.admin + BaseRoutes.write_access;
         public const string rest = BaseRoutes.api + "/REST";
         public const string json = BaseRoutes.api + "/JSON";
+        public const string update_pw = BaseRoutes.admin + BaseRoutes.update_pw;
 
     }
 }

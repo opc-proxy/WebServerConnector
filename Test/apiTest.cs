@@ -151,7 +151,7 @@ namespace Test
             response = await http.PostAsync("http://localhost:8089/api/REST/MyVariable", badReq);
             var body2 = JObject.Parse(await response.Content.ReadAsStringAsync()).ToObject<httpErrorData>();
             Assert.Equal(System.Net.HttpStatusCode.Forbidden, response.StatusCode);
-            Assert.Equal("Forbidden", body2.Error);
+            Assert.Equal("Forbidden", body2.ErrorMessage);
 
             // Bad variable value  --- here return not found, there is an issue about it already
             var query3 = new Dictionary<string, string>{
@@ -193,7 +193,7 @@ namespace Test
 
             Assert.Equal(System.Net.HttpStatusCode.Forbidden, response.StatusCode);
             var resp2 = JObject.Parse(await response.Content.ReadAsStringAsync()).ToObject<httpErrorData>();
-            Assert.Equal("Forbidden", resp2.Error);
+            Assert.Equal("Forbidden", resp2.ErrorMessage);
         }
 
         [Fact]
@@ -230,7 +230,7 @@ namespace Test
             response = await http.PostAsync("http://localhost:8089/api/JSON/write", Req);
             var resp2 = JObject.Parse(await response.Content.ReadAsStringAsync()).ToObject<httpErrorData>();
             Assert.Equal(System.Net.HttpStatusCode.Forbidden, response.StatusCode);
-            Assert.True(resp2.Error == "Forbidden");
+            Assert.True(resp2.ErrorMessage == "Forbidden");
 
         }
     }

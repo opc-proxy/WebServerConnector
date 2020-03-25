@@ -33,21 +33,23 @@ namespace opcRESTconnector {
         public override bool IsFinalHandler => false;
 
         protected override Task OnRequestAsync(IHttpContext context)
-        {   
+        {
+            return AuthUtils.EnsureActiveUser(context) ;
+        }
+    }
+
+    public class AuthUtils {
+        
+        public static Task EnsureActiveUser(IHttpContext context){
             if( string.IsNullOrEmpty(context.Session.Id) ) return AuthUtils.sendForbiddenTemplate(context);
             // if Id is not empty then "session" is also filled (no need to tryGet)
             var session = (sessionData) context.Session["session"];
             var user = session?.user;
             if(user == null) return AuthUtils.sendForbiddenTemplate(context);
-            logger.Debug("Session ID " + session.Id.ToString());
-            logger.Debug("User " + session.user);
             if( !user.isActive() ) return AuthUtils.sendForbiddenTemplate(context);
             if( !user.password.isActive() ) return Utils.HttpRedirect(context, Routes.update_pw);
             return Task.CompletedTask;
         }
-    }
-
-    public class AuthUtils {
         public static Task sendForbiddenTemplate(IHttpContext context, string redirectURL = Routes.login){
             context.Response.StatusCode = 403;
             context.SetHandled();

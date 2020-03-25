@@ -14,6 +14,8 @@ describe('No Auth? You shall not pass',()=>{
   it('Forbid GET POST /any',forbid("/any"));
   it('Forbid GET POST /admin',forbid("/admin"));
   it('Forbid GET POST /admin/write_access',forbid("/admin/write_access"));
+  it('Forbid GET POST /auth',forbid("/auth"));
+  it('Forbid GET POST /auth/update_pw',forbid("/auth/update_pw"));
   it('Forbid GET POST /api',forbid("/api"));
   it('Forbid GET POST /api/REST',forbid("/api/REST"));
   it('Forbid GET POST /api/JSON',forbid("/api/JSON"));
@@ -25,7 +27,7 @@ describe('No Auth? You shall not pass',()=>{
 describe('Login page', function() {
 
   before(function() {
-    return browser.visit('/admin/login');
+    return browser.visit('/auth/login');
   });
 
   it('Is CSRF protected', checkCSRF);
@@ -36,7 +38,7 @@ describe('Login page', function() {
       browser.fill('pw', '13');
       await browser.pressButton('Submit');
       browser.assert.success();
-      browser.assert.url({ pathname: '/admin/login' },"Still in login");
+      browser.assert.url({ pathname: '/auth/login' },"Still in login");
       let c = browser.getCookie("_opcSession");
       assert.isNull(c,"No session cookie");
     });
@@ -46,7 +48,7 @@ describe('Login page', function() {
       browser.fill('pw', '123');
       await browser.pressButton('Submit');
       browser.assert.success();
-      browser.assert.url({ pathname: '/' },"Redirected");
+      browser.assert.url({ pathname: '/auth/update_pw' },"Redirected to update password");
       
     });
 
@@ -56,6 +58,55 @@ describe('Login page', function() {
     });
 
 });
+
+describe('Force Password update',()=>{
+  it('Cannot Visit any page without password activation', async ()=>{
+    await browser.visit("/");
+    browser.assert.success();
+    browser.assert.url({ pathname: '/auth/update_pw' },"Redirected root");
+    
+    await browser.visit("/admin/write_access");
+    browser.assert.success();
+    browser.assert.url({ pathname: '/auth/update_pw' },"Redirected writeaccess");
+
+    await browser.visit("/api/REST/MyVariable");
+    browser.assert.success();
+    browser.assert.url({ pathname: '/auth/update_pw' },"Redirected api");
+
+    await browser.visit("/admin/whatever");
+    browser.assert.success();
+    browser.assert.url({ pathname: '/auth/update_pw' },"Redirected admin whatever");
+
+    await browser.visit("/admin");
+    browser.assert.success();
+    browser.assert.url({ pathname: '/auth/update_pw' },"Redirected admin ");
+
+
+    await browser.visit("/auth");
+    browser.assert.success();
+    browser.assert.url({ pathname: '/auth/update_pw' },"Redirected auth ");
+
+  });
+
+  it('Reject Existing password', async ()=>{
+
+  });
+
+  it('Successfully update password',async ()=>{
+
+    browser.fill('old_pw', '123');
+    browser.fill('new_pw', '1234');
+    await browser.pressButton('Submit');
+    browser.assert.success();
+    browser.assert.url({ pathname: '/' },"Redirected Correctly"); 
+    await browser.visit('/auth/login');
+    browser.fill('pw', '1234');
+    browser.fill('user', 'pino');
+    await browser.pressButton('Submit');
+    browser.assert.success();
+
+  });
+})
 
 describe('Write Access',()=>{
   
@@ -76,10 +127,20 @@ describe('Write Access',()=>{
     checkCSRF();
   });
 
+  it('Wrong password no access',async ()=>{
+    browser.referer = "http://localhost:"+port.toString()+"/api/REST/MyVariable";
+    await  browser.visit('/admin/write_access');
+    browser.fill('pw', '1267');
+    await browser.pressButton('Submit');
+    browser.assert.success();
+    browser.assert.url({ pathname: '/admin/write_access' },"Same Page"); 
+    browser.assert.text("h6","Invalid Password");
+
+  });
   it('Grant access with Redirect',async ()=>{
       browser.referer = "http://localhost:"+port.toString()+"/api/REST/MyVariable";
       await  browser.visit('/admin/write_access');
-      browser.fill('pw', '123');
+      browser.fill('pw', '1234');
       await browser.pressButton('Submit');
       browser.assert.success();
       browser.assert.url({ pathname: '/api/REST/MyVariable' },"Redirected Correctly"); 
@@ -107,9 +168,9 @@ describe('Logout',()=>{
   let session = "";
   it('Removes cookie', async ()=>{
     session = browser.getCookie("_opcSession");
-    await  browser.visit('/admin/logout');
+    await  browser.visit('/auth/logout');
     browser.assert.success();
-    browser.assert.url({ pathname: '/admin/login' },"Redirected Correctly"); 
+    browser.assert.url({ pathname: '/auth/login' },"Redirected Correctly"); 
     let cookie = browser.getCookie("_opcSession");
     assert.equal(cookie,"", "Session cookie is empty");
   });
@@ -131,13 +192,19 @@ describe('Logout',()=>{
 describe('Reader',()=>{
 
   it('Can login',async ()=>{
-    await  browser.visit('/admin/login');
+    await  browser.visit('/auth/login');
     browser.assert.success();
     browser.fill("user","gino");
     browser.fill("pw","123");
     await browser.pressButton('Submit');
     browser.assert.success();
-    browser.assert.url({ pathname: '/' },"Redirected Correctly"); 
+    browser.assert.url({ pathname: '/auth/update_pw' },"Redirected Correctly"); 
+    
+    browser.fill("old_pw","123");
+    browser.fill("new_pw","1234");
+    await browser.pressButton('Submit');
+    browser.assert.success();
+    browser.assert.url({ pathname: '/' },"Redirected Correctly after pw change"); 
   });
 
   it('Can Read, not write',async ()=>{
@@ -155,7 +222,7 @@ describe('Reader',()=>{
   it('Cannot gain write access',async ()=>{
     //browser.referer = "http://localhost:"+port.toString()+"/api/REST/MyVariable";
     await  browser.visit('/admin/write_access');
-    browser.fill('pw', '123');
+    browser.fill('pw', '1234');
     try{
       await browser.pressButton('Submit');
       browser.assert.status(403, "Forbidden")

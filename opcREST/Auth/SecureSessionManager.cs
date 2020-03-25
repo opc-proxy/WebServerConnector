@@ -57,8 +57,9 @@ namespace opcRESTconnector.Session
                 var db_session = store.sessions.GetAndUpdateLastSeen(id);
                 if(db_session == null) return session;
                 
-                logger.Debug("Session Found");
                 session = new SimpleSession(db_session);
+                logger.Debug("Session Found, ID " + session.Id);
+                logger.Debug("Session User, " + db_session.user);
                 session.BeginUse();
             }
             return session;

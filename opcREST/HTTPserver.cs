@@ -27,8 +27,8 @@ namespace opcRESTconnector {
 
             var pino = new UserData("pino","123",AuthRoles.Writer, 1);
             var gino = new UserData("gino","123",AuthRoles.Reader, 1);
-            pino.password.expiry = DateTime.UtcNow.AddDays(1);
-            gino.password.expiry = DateTime.UtcNow.AddDays(1);
+           // pino.password.expiry = DateTime.UtcNow.AddDays(1);
+           // gino.password.expiry = DateTime.UtcNow.AddDays(1);
             app_store.users.Upsert(pino);
             app_store.users.Upsert(gino);
 
@@ -38,8 +38,9 @@ namespace opcRESTconnector {
                 SecureSessionManager cookieAuth = new SecureSessionManager(conf, app_store);
                 var csrf = new CSRF_utils();
                 server.WithSessionManager(cookieAuth);
-                server.WithWebApi(BaseRoutes.admin, m => m.WithController<AdminController>(()=>{return new AdminController(cookieAuth,csrf,conf);}));
+                server.WithWebApi(BaseRoutes.auth, m => m.WithController<LoginController>(()=>{return new LoginController(cookieAuth,csrf,conf);}));
                 server.WithModule(new EnsureActiveUser());
+                server.WithWebApi(BaseRoutes.admin, m => m.WithController<AdminController>(()=>{return new AdminController(cookieAuth,csrf,conf);}));
             }
             else {
                 DummySessionManager baseSession = new DummySessionManager(conf);
@@ -81,25 +82,25 @@ namespace opcRESTconnector {
             if(ctx.Request.RawUrl.Contains("api")){
                 switch (ex.StatusCode) {
                     case 401:
-                        await ctx.SendDataAsync (new httpErrorData () { Error = "Unauthorized" });
+                        await ctx.SendDataAsync (new httpErrorData () { ErrorMessage = "Unauthorized" });
                         break;
                     case 400:
-                        await ctx.SendDataAsync (new httpErrorData () { Error = "Bad Request" });
+                        await ctx.SendDataAsync (new httpErrorData () { ErrorMessage = "Bad Request" });
                         break;
                     case 403:
-                        await ctx.SendDataAsync (new httpErrorData () { Error = "Forbidden" });
+                        await ctx.SendDataAsync (new httpErrorData () { ErrorMessage = "Forbidden" });
                         break;
                     case 404:
-                        await ctx.SendDataAsync (new httpErrorData () { Error = "Not Found" });
+                        await ctx.SendDataAsync (new httpErrorData () { ErrorMessage = "Not Found" });
                         break;
                     case 405:
-                        await ctx.SendDataAsync (new httpErrorData () { Error = "Not Allowed" });
+                        await ctx.SendDataAsync (new httpErrorData () { ErrorMessage = "Not Allowed" });
                         break;
                     case 500:
-                        await ctx.SendDataAsync (new httpErrorData () { Error = "Internal Server Error" });
+                        await ctx.SendDataAsync (new httpErrorData () { ErrorMessage = "Internal Server Error" });
                         break;
                     default:
-                        await ctx.SendDataAsync (new httpErrorData () { Error = "Uknown Exception" });
+                        await ctx.SendDataAsync (new httpErrorData () { ErrorMessage = "Uknown Exception" });
                         break;
                 }
             }
@@ -108,10 +109,4 @@ namespace opcRESTconnector {
         
     }
 
-    /// <summary>
-    /// Class for returning errors data 
-    /// </summary>
-    public class httpErrorData {
-        public string Error { get; set; }
-    }
 }

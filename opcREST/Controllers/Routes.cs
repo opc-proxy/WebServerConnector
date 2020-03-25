@@ -1,5 +1,6 @@
 namespace opcRESTconnector {
     public class BaseRoutes{
+        public const string auth = "/auth";
         public const string admin = "/admin";
         public const string login = "/login";
         public const string logout = "/logout";
@@ -11,12 +12,12 @@ namespace opcRESTconnector {
 
     public class Routes{
         public const string admin = BaseRoutes.admin;
-        public const string login = BaseRoutes.admin + BaseRoutes.login;
-        public const string logout = BaseRoutes.admin + BaseRoutes.logout;
+        public const string login = BaseRoutes.auth + BaseRoutes.login;
+        public const string logout = BaseRoutes.auth + BaseRoutes.logout;
         public const string write_access = BaseRoutes.admin + BaseRoutes.write_access;
         public const string rest = BaseRoutes.api + "/REST";
         public const string json = BaseRoutes.api + "/JSON";
-        public const string update_pw = BaseRoutes.admin + BaseRoutes.update_pw;
+        public const string update_pw = BaseRoutes.auth + BaseRoutes.update_pw;
 
     }
 }

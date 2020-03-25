@@ -21,11 +21,8 @@ namespace opcRESTconnector
         }
     }
 
-    public class ReadResponse{
+    public class ReadResponse :httpErrorData{
         public List<NodeValue> Nodes {get;set;}
-        public string ErrorMessage {get;set;}
-        public bool IsError {get;set;}
-
         public ReadResponse(){
             Nodes = new List<NodeValue>{};
             ErrorMessage = "none";
@@ -33,9 +30,7 @@ namespace opcRESTconnector
         }
     }
 
-    public class WriteResponse{
-        public string ErrorMessage {get;set;}
-        public bool IsError {get;set;}
+    public class WriteResponse : httpErrorData{
         public WriteResponse(){
             ErrorMessage = "none";
             IsError = false;

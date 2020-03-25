@@ -38,7 +38,7 @@ namespace opcRESTconnector{
                             <input type='text' placeholder='username' name='user' value='{user}'>
                             <label>Password</label>
                             <input type='password' placeholder='password' name='pw'>
-                            <div class='g-recaptcha' data-sitekey='{recaptchaClientKey}'></div>
+                            <div class='g-recaptcha' data-sitekey='{recaptchaClientKey}' style='width:304px;height:78px;'></div>
                             <input type='hidden' value='{token}' name='_csrf'>
                             <input type='submit' value='Submit' style='align-self: flex-end; margin-top:3rem;'>
                         </form>
@@ -62,10 +62,13 @@ namespace opcRESTconnector{
                 <meta http-equiv='refresh' content='1; url={redirectTo}'>
                 <link rel='icon' href='https://avatars0.githubusercontent.com/u/52571081?s=200&v=4'>
                 {CSStemplates.normalize}
+                <style>{CSStemplates.layout}</style>
                 <title>Unauthorized</title>
             </head>
-            <body>
-                <h1>NOT Authorized... </h1> <h3>Redirecting...</h3>
+            <body >
+                <div class='flexcolumn' style='margin-top:4rem;'>
+                <h1 class='selfcenter'>NOT Authorized... </h1> <h3 class='selfcenter'>Redirecting...</h3>
+                </div>
             </body>
             </html>
             ";
@@ -136,7 +139,7 @@ namespace opcRESTconnector{
                     action='{Routes.write_access}' 
                     method='post'>
                         <h6 style='color:rebeccapurple'>{error}</h6>
-                        <label>Password</label>
+                        <label>Password</label> 
                         <input type='password' placeholder='password' name='pw'>
                         <input type='submit' value='Submit' style='align-self: flex-end; margin-top:2rem;'>
                         <input type='hidden' value='{token}' name='_csrf'>

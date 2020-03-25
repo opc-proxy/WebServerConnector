@@ -23,44 +23,24 @@ namespace opcRESTconnector {
         Undefined
     }
 
-    public class EnforceAuth : WebModuleBase
+    
+    public class EnsureActiveUser : WebModuleBase
     {
         public static NLog.Logger logger = null;
-
-        public EnforceAuth() : base("/") {
+        public EnsureActiveUser() : base("/") {
             logger = LogManager.GetLogger(this.GetType().Name);
         }
         public override bool IsFinalHandler => false;
 
         protected override Task OnRequestAsync(IHttpContext context)
-        {
-            object usr = null;
-            var session = context.Session;
-            session.TryGetValue("user",out usr);
-            logger.Debug("Auth Module: sid " + session.Id);
-            logger.Debug("Auth Module: Empty " + session.IsEmpty);
-            logger.Debug("Auth Module: Count " + session.Count);
-            logger.Debug("Auth Module: User " + session.ContainsKey("user"));
-            logger.Debug("Auth Module: User1 " + usr);
-            if(String.IsNullOrEmpty(session.Id) || session.IsEmpty ) { 
-                
-                return AuthUtils.sendForbiddenTemplate(context);
-                //throw HttpException.Forbidden("Unauthorized Access");
-                //throw HttpException.Redirect("/admin/login/",401);
-            }
-            else return Task.CompletedTask;
-        }
-    }
-
-    public class EnforceActiveUser : WebModuleBase
-    {
-        public EnforceActiveUser() : base("/") {}
-        public override bool IsFinalHandler => false;
-
-        protected override Task OnRequestAsync(IHttpContext context)
-        {
-            UserData user = (UserData) context.Session["user"];
+        {   
+            if( string.IsNullOrEmpty(context.Session.Id) ) return AuthUtils.sendForbiddenTemplate(context);
+            // if Id is not empty then "session" is also filled (no need to tryGet)
+            var session = (sessionData) context.Session["session"];
+            var user = session?.user;
             if(user == null) return AuthUtils.sendForbiddenTemplate(context);
+            logger.Debug("Session ID " + session.Id.ToString());
+            logger.Debug("User " + session.user);
             if( !user.isActive() ) return AuthUtils.sendForbiddenTemplate(context);
             if( !user.password.isActive() ) return Utils.HttpRedirect(context, Routes.update_pw);
             return Task.CompletedTask;

@@ -23,7 +23,6 @@ namespace opcRESTconnector {
         public Password password {get;set;}
         public AuthRoles role {get;set;}
         public DateTime activity_expiry {get;set;}
-        public DateTime write_expiry {get; set;}
 
         /// <summary>
         /// Constructor for LiteDB
@@ -33,7 +32,6 @@ namespace opcRESTconnector {
             userName = "Anonymous";
             password = new Password();
             role = AuthRoles.Undefined;
-            write_expiry = DateTime.UtcNow;
             activity_expiry = DateTime.UtcNow;
         }
         /// <summary>
@@ -44,7 +42,6 @@ namespace opcRESTconnector {
             userName = user_name;
             password = new Password();
             role = AuthRoles.Undefined;
-            write_expiry = DateTime.UtcNow;
             activity_expiry = DateTime.UtcNow;
         }
         /// <summary>
@@ -58,7 +55,6 @@ namespace opcRESTconnector {
             userName = user_name;
             password = new Password(pwd, 0);
             role = Role;
-            write_expiry = DateTime.UtcNow;
             activity_expiry = DateTime.UtcNow.AddDays(expiry_days);
         }
 
@@ -66,35 +62,12 @@ namespace opcRESTconnector {
             return (activity_expiry.ToUniversalTime().Ticks > DateTime.UtcNow.Ticks);
         }
 
-        public UsrStatusCodes AllowWrite(string pw, double duration_minutes){
-            if(!isActive()) return UsrStatusCodes.ExpiredUsr;
-            if(!password.isActive()) return UsrStatusCodes.ExpiredPW;
-            if(!password.isValid(pw)) return UsrStatusCodes.WrongPW;
-
-            if(role == AuthRoles.Writer || role == AuthRoles.Admin){
-                write_expiry = DateTime.UtcNow.AddMinutes(duration_minutes);
-                return UsrStatusCodes.Success;
-            } 
-            return UsrStatusCodes.NotAuthorized;
-        }
-        public bool hasWriteRights(){
-            if(!isActive()) return false;
-            if(!password.isActive()) return false;
-            return (write_expiry.ToUniversalTime().Ticks  > DateTime.UtcNow.Ticks);
-        }
-
-        public bool hasReadRights(){
-            if(!isActive()) return false;
-            if(!password.isActive()) return false;
-            return role != AuthRoles.Undefined;
-        }
 
         public override string ToString(){
             var out_ = $@"
             User Name : {this.userName}
             Role      : {this.role}
-            Write Permission : ";
-            out_ += hasWriteRights() ? "Yes" : "No";
+            ";
             return out_;
         }
     }

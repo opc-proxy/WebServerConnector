@@ -15,7 +15,6 @@ namespace UserDataStore
             var empty_u = new UserData();
             Assert.Equal("Anonymous", empty_u.userName);
             Assert.Equal(AuthRoles.Undefined, empty_u.role);
-            Assert.False( empty_u.hasWriteRights());
             Assert.True( empty_u.password.expiry.Ticks < DateTime.UtcNow.Ticks);
             Assert.Null(empty_u.password.hashedValue);
             Assert.False(empty_u.password.isValid(""));
@@ -25,6 +24,7 @@ namespace UserDataStore
         public void Methods()
         {
             var user = new UserData("pino","123",AuthRoles.Reader, 1);
+            var _s =  new sessionData(user,1);
             Assert.True(user.isActive());
             Assert.False(user.password.isActive());
             // user password is expired, but still can validate
@@ -32,12 +32,12 @@ namespace UserDataStore
             user.password.update_password("123","1234",1);
             Assert.True(user.password.isActive());
             Assert.True(user.isActive());
-            Assert.False(user.hasWriteRights());
-            user.AllowWrite("1234",1);
-            Assert.False(user.hasWriteRights());
+            Assert.False(_s.hasWriteRights());
+            _s.AllowWrite("1234",1);
+            Assert.False(_s.hasWriteRights());
             user.role = AuthRoles.Writer;
-            user.AllowWrite("1234",1);
-            Assert.True(user.hasWriteRights());
+            _s.AllowWrite("1234",1);
+            Assert.True(_s.hasWriteRights());
             Assert.False(user.password.isValid("123"));
             Assert.True(user.password.isValid("1234"));
         }
@@ -82,12 +82,12 @@ namespace UserDataStore
             Assert.NotNull(anonymous);
             Assert.Equal("Anonymous",anonymous.userName);
             Assert.Equal(AuthRoles.Reader, user.role);
-            Assert.False(user.hasWriteRights());
 
             // Session
             var s = store.sessions.Get(session_id);
             Assert.NotNull(s);
             Assert.Equal("pino",s.user.userName);
+            Assert.False(s.hasWriteRights());
             
             // Quick session
             var session = new sessionData(user, 1);
@@ -110,20 +110,23 @@ namespace UserDataStore
         public void Methods()
         {
             var pino = store.users.Get("pino");
+            var s_pino = new sessionData(pino,1);
             var gino = store.users.Get("gino");
+            var s_gino = new sessionData(gino,1);
             var none = store.users.Get("none");
+            var s_none = new sessionData(none,1);
 
-            Assert.False(pino.hasWriteRights());
-            Assert.False(gino.hasWriteRights());
-            Assert.False(none.hasWriteRights());
+            Assert.False(s_pino.hasWriteRights());
+            Assert.False(s_gino.hasWriteRights());
+            Assert.False(s_none.hasWriteRights());
 
             Assert.True(pino.password.isValid("123"));
             Assert.True(gino.password.isValid("123"));
             Assert.False(none.password.isValid("123"));
 
-            Assert.Equal( UsrStatusCodes.NotAuthorized,pino.AllowWrite("123",1));
-            Assert.Equal(UsrStatusCodes.Success, gino.AllowWrite("123",1));
-            Assert.Equal(UsrStatusCodes.ExpiredUsr, none.AllowWrite("123",1));
+            Assert.Equal( UsrStatusCodes.NotAuthorized,s_pino.AllowWrite("123",1));
+            Assert.Equal(UsrStatusCodes.Success, s_gino.AllowWrite("123",1));
+            Assert.Equal(UsrStatusCodes.ExpiredUsr, s_none.AllowWrite("123",1));
         }
     }
 

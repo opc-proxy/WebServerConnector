@@ -18,13 +18,13 @@ using System.Net;
 
 
 namespace opcRESTconnector{
-    public  class logonLogoffController : WebApiController{
+    public  class AdminController : WebApiController{
         CSRF_utils _csrf;
         SecureSessionManager session_manager;     
 
         RESTconfigs _conf;   
 
-        public logonLogoffController(SecureSessionManager ssm, CSRF_utils csrf, RESTconfigs conf){
+        public AdminController(SecureSessionManager ssm, CSRF_utils csrf, RESTconfigs conf){
             _csrf = csrf;
             session_manager = ssm;
             _conf = conf;
@@ -58,8 +58,6 @@ namespace opcRESTconnector{
             var _user = session_manager.store.users.Get(user);
             if(!_user.isActive())  { await AuthUtils.sendForbiddenTemplate(HttpContext); return;}
             if( !_user.password.isValid(pw) ) {        
-                // set some session cookie for error display
-                //HttpContext.Redirect("/admin/login/");
                 await logon("username or password invalid", user);
                 return;
             }
@@ -91,7 +89,7 @@ namespace opcRESTconnector{
             var referer = HttpContext.Request.Headers["Referer"] ?? "/";
             if(!String.IsNullOrEmpty(override_referer)) referer = override_referer;
             
-            UserData _user = (UserData) HttpContext.Session["user"];
+            UserData _user = (((sessionData) HttpContext.Session["session"])?.user);
             string user_name = (_user != null) ? _user.userName : "Anonymous";
             return HttpContext.SendStringAsync(HTMLtemplates.writeAccess(token,user_name,referer, error),"text/html",Encoding.UTF8); 
         }
@@ -111,14 +109,15 @@ namespace opcRESTconnector{
             string referer = data.Get("_referrer") ?? "/";
             if(string.IsNullOrEmpty(pw)) return write_access(referer,"Invalid Password");
             
-            UserData _user = (UserData) HttpContext.Session["user"];
-            
-            var status = _user.AllowWrite(pw,_conf.writeExpiryMinutes);
+            var _session = (sessionData) HttpContext.Session["session"];
+            if(_session == null) return  AuthUtils.sendForbiddenTemplate(HttpContext,referer); 
+
+            var status = _session.AllowWrite(pw,_conf.writeExpiryMinutes);
             if(status == UsrStatusCodes.WrongPW )  return write_access(referer,"Invalid Password");
             else if( status != UsrStatusCodes.Success ) return  AuthUtils.sendForbiddenTemplate(HttpContext,referer); 
             
-            // change user permission in DB
-            session_manager.store.users.Update(_user);
+            // change session permission in DB
+            session_manager.store.sessions.Update(_session);
             
             return Utils.HttpRedirect(HttpContext,referer);
         }
@@ -128,7 +127,7 @@ namespace opcRESTconnector{
             if( string.IsNullOrEmpty(HttpContext.Session.Id) ) return AuthUtils.sendForbiddenTemplate(HttpContext);
             var token = _csrf.setCSRFcookie(HttpContext);
 
-            UserData _user = (UserData) HttpContext.Session["user"];
+            UserData _user = (((sessionData) HttpContext.Session["session"])?.user);
             string user_name = (_user != null) ? _user.userName : "Anonymous";
             return HttpContext.SendStringAsync(HTMLtemplates.updatePW(token,user_name,error),"text/html",Encoding.UTF8); 
         }
@@ -144,7 +143,9 @@ namespace opcRESTconnector{
             string old_pw = data.Get("old_pw") ;
             string new_pw = data.Get("new_pw") ;
             
-            UserData user = (UserData) HttpContext.Session["user"];
+            UserData user = (((sessionData) HttpContext.Session["session"])?.user);
+            if(user == null) { await AuthUtils.sendForbiddenTemplate(HttpContext); return;}
+
             if(!user.isActive()) { await AuthUtils.sendForbiddenTemplate(HttpContext); return;}
             var status = user.password.update_password(old_pw,new_pw, _conf.sessionExpiryHours);
             if( status == UsrStatusCodes.WrongPW ) { await update_pw("Invalid Password"); return;}
@@ -162,7 +163,9 @@ namespace opcRESTconnector{
             if( string.IsNullOrEmpty(HttpContext.Session.Id) ){
                 return AuthUtils.sendForbiddenTemplate(HttpContext);
             }
-            UserData user = (UserData) HttpContext.Session["user"];
+            UserData user = (((sessionData) HttpContext.Session["session"])?.user);
+            if(user == null) { return AuthUtils.sendForbiddenTemplate(HttpContext);}
+
             if(!user.isActive()) { return  AuthUtils.sendForbiddenTemplate(HttpContext); }
             if(!user.password.isActive()) return Utils.HttpRedirect(HttpContext, Routes.update_pw);
             throw HttpException.NotFound();

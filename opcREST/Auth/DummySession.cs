@@ -21,8 +21,9 @@ namespace opcRESTconnector.Session{
             // Hack the system! building dummy user that can Read and Write, always.
             UserData _user = new UserData("Anonymous","none",AuthRoles.Writer,1);
             _user.password.expiry = DateTime.UtcNow.AddMinutes(1);
-            _user.write_expiry = DateTime.UtcNow.AddMinutes(1);
-            return_session["user"] = _user;
+            sessionData _session = new sessionData(_user, 1);
+            _session.write_expiry = DateTime.UtcNow.AddMinutes(1);
+            return_session["session"] = _session;
             return_session.BeginUse();
             return return_session;        
         }

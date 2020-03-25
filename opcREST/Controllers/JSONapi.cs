@@ -27,8 +27,8 @@ namespace opcRESTconnector
         public async Task<ReadResponse> GetNodes(){
             
             // Check if Authorized
-            UserData _user = (UserData) HttpContext.Session["user"];
-            if(_conf.enableCookieAuth && (_user == null || !_user.hasReadRights()))
+            var _session = (sessionData) HttpContext.Session?["session"];
+            if(_conf.enableCookieAuth && (_session == null || !_session.hasReadRights()))
                 throw HttpException.Forbidden();
             
             if( !HttpContext.Request.ContentType.Contains("application/json")) {
@@ -63,9 +63,9 @@ namespace opcRESTconnector
         [Route(HttpVerbs.Post, "/write")]
          public async Task<WriteResponse> PostData() 
         {
-            UserData _user = (UserData) HttpContext.Session["user"];
+            var _session = (sessionData) HttpContext.Session?["session"];
             // Check if Authorized
-            if(_conf.enableCookieAuth && (_user == null || !_user.hasWriteRights() ))
+            if(_conf.enableCookieAuth && (_session == null || !_session.hasWriteRights() ))
                 throw HttpException.Forbidden();
             
             if( !HttpContext.Request.ContentType.Contains("application/json")) 

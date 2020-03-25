@@ -27,6 +27,7 @@ namespace opcRESTconnector{
         .box{
             align-self: center;
             /*height : 30vh;*/
+            min-width:44rem;
             border-radius: 10px;
             padding: 5rem;
             display:flex;
@@ -40,6 +41,9 @@ namespace opcRESTconnector{
         .flexcolumn{
             display: flex;
             flex-direction: column;
+        }
+        .selfcenter{
+            align-self: center;
         }
     ";
     }

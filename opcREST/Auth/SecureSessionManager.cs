@@ -82,6 +82,11 @@ namespace opcRESTconnector.Session
             context.Response.Cookies.Add(cookie);
             return session;
         }
+        /// <summary>
+        /// Verify signature, reject expired sessions
+        /// </summary>
+        /// <param name="cookieValue"></param>
+        /// <returns></returns>
         public string AuthenticateCookie(string cookieValue){
             logger.Debug("Authenticating cookie value " + cookieValue);
             jwtPayload j = null;

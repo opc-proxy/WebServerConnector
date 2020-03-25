@@ -61,8 +61,9 @@ namespace opcRESTconnector
 
         [Route(HttpVerbs.Get, "/{node_name}")]
         public  ReadResponse GetNode(string node_name){
-            UserData _user = (UserData) HttpContext.Session["user"];
-            if(_conf.enableCookieAuth && (_user == null || !_user.hasReadRights()))
+            
+            var _session = (sessionData) HttpContext.Session?["session"];
+            if(_conf.enableCookieAuth && (_session == null || !_session.hasReadRights()))
                 throw HttpException.Forbidden();
 
            try{
@@ -82,9 +83,9 @@ namespace opcRESTconnector
         [Route(HttpVerbs.Post, "/{node_name}")]
          public async Task<WriteResponse> PostData(string node_name) 
         {
-            UserData _user = (UserData) HttpContext.Session["user"];
-              // Check if Authorized
-            if(_conf.enableCookieAuth && (_user == null || !_user.hasWriteRights() )) 
+            var _session = (sessionData) HttpContext.Session?["session"];
+            // Check if Authorized
+            if(_conf.enableCookieAuth && (_session == null || !_session.hasWriteRights() ))
                 throw HttpException.Forbidden();
             
             var data = await HttpContext.GetRequestFormDataAsync();

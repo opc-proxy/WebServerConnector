@@ -41,7 +41,7 @@ namespace opcRESTconnector.Session {
                 Duration = TimeSpan.FromTicks( ticks > 0 ? ticks : 0 );
                 LastActivity = data.last_seen;
                 _usageCount = 1;
-                this["user"] = data.user;
+                this["session"] = data;
             }
 
             public string Id { get; }

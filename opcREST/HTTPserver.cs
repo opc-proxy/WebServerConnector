@@ -28,7 +28,7 @@ namespace opcRESTconnector {
             var pino = new UserData("pino","123",AuthRoles.Writer, 1);
             var gino = new UserData("gino","123",AuthRoles.Reader, 1);
             pino.password.expiry = DateTime.UtcNow.AddDays(1);
-           // gino.password.expiry = DateTime.UtcNow.AddDays(1);
+            gino.password.expiry = DateTime.UtcNow.AddDays(1);
             app_store.users.Upsert(pino);
             app_store.users.Upsert(gino);
 
@@ -38,9 +38,8 @@ namespace opcRESTconnector {
                 SecureSessionManager cookieAuth = new SecureSessionManager(conf, app_store);
                 var csrf = new CSRF_utils();
                 server.WithSessionManager(cookieAuth);
-                server.WithWebApi(BaseRoutes.admin, m => m.WithController<logonLogoffController>(()=>{return new logonLogoffController(cookieAuth,csrf,conf);}));
-                server.WithModule(new EnforceAuth());
-                server.WithModule(new EnforceActiveUser());
+                server.WithWebApi(BaseRoutes.admin, m => m.WithController<AdminController>(()=>{return new AdminController(cookieAuth,csrf,conf);}));
+                server.WithModule(new EnsureActiveUser());
             }
             else {
                 DummySessionManager baseSession = new DummySessionManager(conf);

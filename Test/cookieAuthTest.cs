@@ -17,7 +17,7 @@ namespace Test
                 {
                     'opcServerURL':'opc.tcp://localhost:4840/freeopcua/server/',
                     'loggerConfig' :{
-                        'loglevel' :'error'
+                        'loglevel' :'fatal'
                     },
 
                     'nodesLoader' : {

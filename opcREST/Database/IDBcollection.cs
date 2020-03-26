@@ -5,9 +5,10 @@ namespace opcRESTconnector.Data
 {
     public abstract class IDBcollection<T>{
         public ILiteCollection<T> _collection;
+        public LiteDatabase _db;
         public IDBcollection(string collectionName,LiteDatabase db){
             _collection = db.GetCollection<T>(collectionName);
-
+            _db = db;
             ensureIndex();
         }
 

@@ -28,32 +28,45 @@ namespace opcRESTconnector.Data
         public override void ensureIndex(){ /* username is PK, nothing else to index here */ }
         public override bool Delete(UserData data)
         {
-            return _collection.Delete(data.userName);
+            // LiteDB should be thread safe, but somehow in a test I did seems not, thread just fail misteriously
+            // this only happens with ~10000 thread per second...
+            // So here I manually lock, maybe there is something I'm missing... FIXME.
+            lock(_db){
+                return _collection.Delete(data.userName);
+            }
         }
 
         public override UserData Get(string user_name)
         {
-            UserData user = _collection.FindOne(x => x.userName == user_name); 
-            return user ?? new UserData();
+            lock(_db){
+                UserData user = _collection.FindOne(x => x.userName == user_name); 
+                return user ?? new UserData();
+            }
         }
 
         public override BsonValue Insert(UserData data)
         {
-            try{
-                var o = _collection.Insert(data);
-                return o;
-            }
-            catch{
-                return BsonValue.Null;
+            lock(_db){
+                try{
+                    var o = _collection.Insert(data);
+                    return o;
+                }
+                catch{
+                    return BsonValue.Null;
+                }
             }
         }
 
         public override void Upsert(UserData data)
         {
-            _collection.Upsert(data);
+            lock(_db){
+                _collection.Upsert(data);
+            }
         }
         public override bool Update(UserData data){
-            return _collection.Update(data);
+            lock(_db){
+                return _collection.Update(data);
+            }
         }
         
     }

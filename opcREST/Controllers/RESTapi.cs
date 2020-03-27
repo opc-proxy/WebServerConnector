@@ -8,6 +8,8 @@ using System;
 using OpcProxyCore;
 using opcRESTconnector.Session;
 using System.Net;
+using System.Net.Mail;
+
 
 namespace opcRESTconnector
 {
@@ -46,6 +48,18 @@ namespace opcRESTconnector
         public static string HTTPescape(string input){
             return WebUtility.HtmlEncode(input);
         }
+
+        public static bool isEmail(string email){
+            if( String.IsNullOrEmpty(email) ) return false;
+
+            try{
+                MailAddress m = new MailAddress(email);
+                return true;
+            }
+            catch{
+                return false;
+            }
+        }   
     }
 
     public sealed class nodeRESTController : WebApiController

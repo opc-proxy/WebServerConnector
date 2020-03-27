@@ -5,6 +5,7 @@ using System;
 using System.Net;
 using System.Security.Cryptography;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using EmbedIO.Routing;
 using EmbedIO.Utilities;
 using EmbedIO.WebApi;
@@ -114,9 +115,26 @@ namespace opcRESTconnector {
 
         public bool validateCSRFtoken(IHttpContext context){
             
-            var _data = context.GetRequestFormDataAsync();
-            _data.Wait();
-            var data = _data.Result;
+            CSRFdata data = new CSRFdata();
+
+            if(context.Request.ContentType.ToLower().Contains("application/json")){
+                var _data = context.GetRequestDataAsync<CSRFdata>();
+                _data.Wait();
+                data = _data.Result;
+            }
+            else if( context.Request.ContentType.ToLower().Contains("application/x-www-form-urlencoded")){
+                var _data = context.GetRequestFormDataAsync();
+                _data.Wait();
+                var __data = _data.Result;
+                if(!__data.ContainsKey("_csrf")) return false;
+                data._csrf = __data["_csrf"];
+            }
+            else return false;
+                       
+           return _validateCSRFtoken(context,data);
+        }
+
+        public bool _validateCSRFtoken(IHttpContext context, CSRFdata data){
             System.Net.Cookie req_cookie = null;
             foreach (var c in context.Request.Cookies)
             {
@@ -130,13 +148,23 @@ namespace opcRESTconnector {
             if(!csrf_gen.ValidateToken(req_cookie.Value,secret,salt)) return false;
             logger.Debug("CSRF token Valid");
 
-            if( !data.ContainsKey("_csrf") ) return false;
+            //if( !data.ContainsKey("_csrf") ) return false;
+            if( String.IsNullOrEmpty(data._csrf) ) return false;
             logger.Debug("CSRF token present in data");
             
-            if( req_cookie.Value != data.Get("_csrf") ) return false;
+            //if( req_cookie.Value != data.Get("_csrf") ) return false;
+            if( req_cookie.Value != data._csrf ) return false;
             logger.Debug("CSRF token and Cookie are same");
 
             return true;
+        }
+
+    }
+
+    public  class CSRFdata {
+        public string _csrf {get;set;}
+        public CSRFdata(){
+            _csrf = "";
         }
     }
 }

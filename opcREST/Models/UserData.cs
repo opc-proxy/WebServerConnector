@@ -1,6 +1,8 @@
 using LiteDB;
 using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
+
 
 namespace opcRESTconnector {
 
@@ -22,6 +24,8 @@ namespace opcRESTconnector {
         public string userName {get;set;}
         public Password password {get;set;}
         public AuthRoles role {get;set;}
+        public string email {get;set;}
+        public string fullName {get;set;}
         public DateTime activity_expiry {get;set;}
 
         /// <summary>
@@ -29,20 +33,15 @@ namespace opcRESTconnector {
         /// </summary>
         [BsonCtor]
         public UserData(){
-            userName = "Anonymous";
-            password = new Password();
-            role = AuthRoles.Undefined;
-            activity_expiry = DateTime.UtcNow;
+            _init();
         }
         /// <summary>
         /// Quick constructor used for session
         /// </summary>
         /// <param name="user_name"></param>
         public UserData(string user_name){
+            _init();
             userName = user_name;
-            password = new Password();
-            role = AuthRoles.Undefined;
-            activity_expiry = DateTime.UtcNow;
         }
         /// <summary>
         /// Creates an Active user with expired password
@@ -51,11 +50,22 @@ namespace opcRESTconnector {
         /// <param name="pwd"></param>
         /// <param name="Role"></param>
         /// <param name="expiry_days"></param>
-        public UserData(string user_name , string pwd , AuthRoles Role, double expiry_days ){
+        public UserData(string user_name, string pwd , AuthRoles Role, double expiry_days ){
             userName = user_name;
             password = new Password(pwd, 0);
             role = Role;
             activity_expiry = DateTime.UtcNow.AddDays(expiry_days);
+            email="";
+            fullName = "";
+        }
+
+        private void _init(){
+            userName = "Anonymous";
+            password = new Password();
+            role = AuthRoles.Undefined;
+            activity_expiry = DateTime.UtcNow;
+            email ="";
+            fullName = "";
         }
 
         public bool isActive(){
@@ -69,6 +79,17 @@ namespace opcRESTconnector {
             Role      : {this.role}
             ";
             return out_;
+        }
+
+        public bool isAnonymous(){
+            return userName == "Anonymous";
+        }
+
+        public static string GeneratePW(){
+            byte[] token = new byte[8];
+            var rnd = new RNGCryptoServiceProvider();
+            rnd.GetBytes(token);
+            return  Convert.ToBase64String(token);
         }
     }
 
@@ -123,4 +144,57 @@ namespace opcRESTconnector {
 
         
     }
+
+    public class UserForm {
+        public string userName {get;set;}
+        public string role {get;set;}
+        public string email {get;set;}
+        public string fullName {get;set;}
+        public double duration_days {get;set;}
+
+        public UserForm(){
+            userName = email = role = fullName = "";
+            duration_days = 0;
+        }
+
+        public AuthRoles getRole(){
+            switch(role){
+                case "admin" :
+                    return AuthRoles.Admin;
+                case "writer" :
+                    return AuthRoles.Writer;
+                case "reader" :
+                    return AuthRoles.Reader;
+                default :
+                    return AuthRoles.Undefined;
+            }
+        }
+        public override string ToString(){
+            return $@"
+            username : {userName}
+            role     : {role}
+            email    : {email}
+            full name: {fullName}
+            expiry   : {duration_days}
+            ";
+        }
+    }
+
+    public class UserResponse:httpErrorData {
+        public string userName {get;set;}
+        public string role {get;set;}
+        public string email {get;set;}
+        public string fullName {get;set;}
+        public string activity_expiry {get;set;}
+        public string password_expiry {get;set;}
+        public string temporary_pw {get;set;}
+        public bool isSend {get;set;}
+        public UserResponse(){
+            userName = role = email = fullName = activity_expiry = password_expiry = temporary_pw = "";
+            IsError = false;
+            ErrorMessage = "";
+            isSend = false;
+        }
+    }
+    
 }

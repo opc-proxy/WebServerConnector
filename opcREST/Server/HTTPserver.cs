@@ -40,7 +40,7 @@ namespace opcRESTconnector {
                 server.WithSessionManager(cookieAuth);
                 server.WithWebApi(BaseRoutes.auth, m => m.WithController<LoginController>(()=>{return new LoginController(cookieAuth,csrf,conf);}));
                 server.WithModule(new EnsureActiveUser());
-                server.WithWebApi(BaseRoutes.admin, m => m.WithController<AdminController>(()=>{return new AdminController(cookieAuth,csrf,conf);}));
+                server.WithWebApi(BaseRoutes.admin, m => m.WithController<AdminController>(()=>{return new AdminController(app_store,csrf,conf);}));
             }
             else {
                 DummySessionManager baseSession = new DummySessionManager(conf);
@@ -71,7 +71,7 @@ namespace opcRESTconnector {
             return server;
         }
 
-        private static string buildHostURL(RESTconfigs conf){
+        public static string buildHostURL(RESTconfigs conf){
             var url =  conf.https?"https":"http" + "://" + conf.host + ":" + conf.port + "/" ;
             if(conf.urlPrefix != "") url = url + conf.urlPrefix;
             return url;

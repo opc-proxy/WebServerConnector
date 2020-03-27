@@ -37,6 +37,7 @@ namespace opcRESTconnector
         public double sessionExpiryHours{get; set;}
         public double writeExpiryMinutes{get; set;}
         public string apyKey {get; set;}
+        public string sendGridAPIkey{get;set;}
         public List<List<string>> userAuth {get; set;}
         public string staticFilesPath {get; set;}
         public bool serverLog {get; set;}
@@ -44,6 +45,7 @@ namespace opcRESTconnector
         public string recaptchaServerKey{get; set;}
         public string appStoreFileName{get; set;}
         public bool recoveryMode{get;set;}
+        public string sendGridEmail {get;set;}
 
         public bool isRecaptchaEnabled(){
             return (recaptchaClientKey != "" && recaptchaServerKey !="");
@@ -69,6 +71,8 @@ namespace opcRESTconnector
             recaptchaServerKey = "";
             appStoreFileName = "webserver.data.db";
             recoveryMode = false;
+            sendGridAPIkey = "";
+            sendGridEmail="admin@gmail.com";
         }
 
     }

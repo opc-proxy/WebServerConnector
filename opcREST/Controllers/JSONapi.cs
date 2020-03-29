@@ -90,10 +90,10 @@ namespace opcRESTconnector
             var status = await _service.writeToOPCserver(data.name, data.value);
             
             WriteResponse r = new WriteResponse();
-            r.IsError = (Opc.Ua.StatusCode.IsBad(status[0]));
-            r.ErrorMessage = (r.IsError) ? "Not Found" : "none";
+            r.Success = !(Opc.Ua.StatusCode.IsBad(status[0]));
+            r.ErrorMessage = (!r.Success) ? "Not Found" : "none";
 
-            if(r.IsError) HttpContext.Response.StatusCode = 404;
+            if(!r.Success) HttpContext.Response.StatusCode = 404;
 
             return r;
         }

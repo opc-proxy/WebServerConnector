@@ -6,9 +6,13 @@ namespace opcRESTconnector {
         public const string logout = "/logout";
         public const string write_access = "/write_access";
         public const string update_pw = "/update_pw";
-        public const string create_user = "/create_user";
+        public const string users = "/users";
+        public const string create_user = users + "/create";
+        public const string read_user = users + "/read";
+        public const string read_session = users + "/sessions";
         public const string api = "/api";
         public const string internal_css = "/_css";
+        public const string internal_js = "/_js";
     }
 
     public class Routes{
@@ -20,6 +24,7 @@ namespace opcRESTconnector {
         public const string json = BaseRoutes.api + "/JSON";
         public const string update_pw = BaseRoutes.auth + BaseRoutes.update_pw;
         public const string create_user = BaseRoutes.admin + BaseRoutes.create_user;
+        public const string read_session = BaseRoutes.admin + BaseRoutes.read_session;
 
     }
 }

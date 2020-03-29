@@ -1,16 +1,20 @@
+using System;
+using System.Collections.Generic;
+
 namespace opcRESTconnector
 {
-    
 
 /// <summary>
-/// Class for returning errors data similar to API
+/// Class for returning errors data 
 /// </summary>
-public class httpErrorData {
-    public bool IsError { get; set; }
+public class ErrorData {
+    public bool Success { get; set; }
     public string ErrorMessage { get; set; }
-    public httpErrorData(){
-        IsError = true;
+    public List<string> ErrorCodes {get;set;}
+    public ErrorData(){
+        Success = false;
         ErrorMessage = "";
+        ErrorCodes = new List<string>();
     }
 }
 

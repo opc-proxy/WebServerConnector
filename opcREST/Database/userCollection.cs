@@ -1,5 +1,6 @@
 using LiteDB;
 using System;
+using System.Collections.Generic;
 
 namespace opcRESTconnector.Data
 {
@@ -41,6 +42,12 @@ namespace opcRESTconnector.Data
             lock(_db){
                 UserData user = _collection.FindOne(x => x.userName == user_name); 
                 return user ?? new UserData();
+            }
+        }
+
+        public IEnumerable<UserData> GetAll(){
+            lock(_db){
+                return _collection.FindAll();
             }
         }
 

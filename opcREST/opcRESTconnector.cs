@@ -6,6 +6,7 @@ using OpcProxyCore;
 using EmbedIO;
 using System;
 using NLog;
+using opcRESTconnector.Data;
 
 namespace opcRESTconnector
 {
@@ -16,6 +17,8 @@ namespace opcRESTconnector
 
         public WebServer server;
         public static NLog.Logger logger = null;
+
+        public DataStore app_store;
 
         public opcREST(){
             logger = LogManager.GetLogger(this.GetType().Name);
@@ -39,7 +42,9 @@ namespace opcRESTconnector
                     try { Swan.Logging.Logger.UnregisterLogger<ConsoleLogger>();  }
                     catch { /* in case of multiple instance they seems to share Swan logging and this throws */ }
                 }
-                server = HTTPServerBuilder.CreateWebServer(_conf,manager);
+                app_store = new DataStore(_conf);
+
+                server = HTTPServerBuilder.CreateWebServer(_conf,manager, app_store);
                 
                 // mainly used in case of port already in use
                 server.StateChanged += (s, e) => {
@@ -67,6 +72,7 @@ namespace opcRESTconnector
         public void clean()
         {
             server?.Dispose();
+            app_store?.Dispose();
         }
 
         

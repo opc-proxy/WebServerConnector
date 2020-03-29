@@ -100,19 +100,19 @@ namespace Test
             Assert.True(response.IsSuccessStatusCode);
             string body = await response.Content.ReadAsStringAsync();
             var json = JObject.Parse(body).ToObject<ReadResponse>();
-            Assert.False(json.IsError);
+            Assert.True(json.Success);
             Assert.Single(json.Nodes);
             Assert.Equal( "MyVariable", json.Nodes[0].Name);
             Assert.True( json.Nodes[0].Value != null);
             Assert.True( json.Nodes[0].Type == "double");
             Assert.Equal("none", json.ErrorMessage);
-            Assert.False(json.IsError);
+            Assert.True(json.Success);
             
             // Return not found if variable does not exist
             Assert.Equal(System.Net.HttpStatusCode.NotFound, errorResponse.StatusCode);
             body = await errorResponse.Content.ReadAsStringAsync();
             json = JObject.Parse(body).ToObject<ReadResponse>();
-            Assert.True(json.IsError);
+            Assert.False(json.Success);
             Assert.Empty(json.Nodes);
             Assert.Equal("Not Found", json.ErrorMessage);
             
@@ -132,14 +132,14 @@ namespace Test
 
             // If variable exist and api key provided then success
             Assert.True(response.IsSuccessStatusCode);
-            Assert.False(body.IsError);
+            Assert.True(body.Success);
             Assert.Equal("none", body.ErrorMessage);
 
             // Variable does not exist
             response = await http.PostAsync("http://localhost:8089/api/REST/MyVarable", goodReq);
             body = JObject.Parse(await response.Content.ReadAsStringAsync()).ToObject<WriteResponse>();
             Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
-            Assert.True(body.IsError);
+            Assert.False(body.Success);
             Assert.Equal("Not Found", body.ErrorMessage);
 
             // no apikey or wrong key -> not authorized
@@ -149,7 +149,7 @@ namespace Test
             };
             var badReq = new FormUrlEncodedContent(query2);
             response = await http.PostAsync("http://localhost:8089/api/REST/MyVariable", badReq);
-            var body2 = JObject.Parse(await response.Content.ReadAsStringAsync()).ToObject<httpErrorData>();
+            var body2 = JObject.Parse(await response.Content.ReadAsStringAsync()).ToObject<ErrorData>();
             Assert.Equal(System.Net.HttpStatusCode.Forbidden, response.StatusCode);
             Assert.Equal("Forbidden", body2.ErrorMessage);
 
@@ -192,7 +192,7 @@ namespace Test
             response = await http.PostAsync("http://localhost:8089/api/JSON/read", Req);
 
             Assert.Equal(System.Net.HttpStatusCode.Forbidden, response.StatusCode);
-            var resp2 = JObject.Parse(await response.Content.ReadAsStringAsync()).ToObject<httpErrorData>();
+            var resp2 = JObject.Parse(await response.Content.ReadAsStringAsync()).ToObject<ErrorData>();
             Assert.Equal("Forbidden", resp2.ErrorMessage);
         }
 
@@ -205,7 +205,7 @@ namespace Test
             var resp = JObject.Parse(await response.Content.ReadAsStringAsync()).ToObject<WriteResponse>();
 
             Assert.True(response.IsSuccessStatusCode);
-            Assert.False(resp.IsError);
+            Assert.True(resp.Success);
             Assert.Equal("none", resp.ErrorMessage);
 
             // not found if var does not exist
@@ -223,12 +223,12 @@ namespace Test
             response = await http.PostAsync("http://localhost:8089/api/JSON/write", Req);
             resp = JObject.Parse(await response.Content.ReadAsStringAsync()).ToObject<WriteResponse>();
             Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
-            Assert.True(resp.IsError);
+            Assert.False(resp.Success);
 
             // Forbidden if wrong apiKey
             Req = new StringContent("{name:'MyVariable', apiKey:'pppo', value:'7'}", Encoding.UTF8, "application/json");
             response = await http.PostAsync("http://localhost:8089/api/JSON/write", Req);
-            var resp2 = JObject.Parse(await response.Content.ReadAsStringAsync()).ToObject<httpErrorData>();
+            var resp2 = JObject.Parse(await response.Content.ReadAsStringAsync()).ToObject<ErrorData>();
             Assert.Equal(System.Net.HttpStatusCode.Forbidden, response.StatusCode);
             Assert.True(resp2.ErrorMessage == "Forbidden");
 

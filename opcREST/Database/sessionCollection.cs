@@ -75,16 +75,22 @@ namespace opcRESTconnector.Data
         /// </summary>
         /// <param name="s_Id"></param>
         /// <returns></returns>
-        public sessionData GetAndUpdateLastSeen(string s_Id){
+        public sessionData GetAndUpdateLastSeen(string s_Id, string ip){
             lock(_db){
                 var s = Get(s_Id);
                 if(s == null) return null;
                 s.last_seen = DateTime.UtcNow;
-                if(_collection.Update(s)) return s;
-                else return null;
+                s.ip = ip;
+                _collection.Update(s);
+                return s;
             }
         }
 
+        public IEnumerable<sessionData> GetAllForUser(string user_name){
+            lock(_db){
+                return _collection.Find(x => x.user.userName == user_name);
+            }
+        }
         public override void Upsert(sessionData data)
         {
             lock(_db){

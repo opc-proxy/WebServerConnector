@@ -71,6 +71,37 @@ namespace opcRESTconnector{
             return Utils.HttpRedirect(HttpContext,referer);
         }
 
+        [Route(HttpVerbs.Get, BaseRoutes.read_user)]
+        public Task readusers(){
+
+            if( ((sessionData)HttpContext.Session["session"]).user?.role != AuthRoles.Admin)  
+                return AuthUtils.sendForbiddenTemplate(HttpContext); 
+            
+            var list_usr = store.users.GetAll();
+
+            var resp_list = new List<UserResponse>();
+            foreach (var usr in list_usr)
+            {
+                resp_list.Add(new UserResponse(usr));
+            }
+
+            return HttpContext.SendDataAsync(resp_list);
+        }
+
+        [Route(HttpVerbs.Get, "/users/{username}/sessions" )]
+        public Task readsessions(string username){
+            if( ((sessionData)HttpContext.Session["session"]).user?.role != AuthRoles.Admin)  
+                return AuthUtils.sendForbiddenTemplate(HttpContext); 
+            
+            var list_sessions = store.sessions.GetAllForUser(username);
+            List<SessionResponse> resp = new List<SessionResponse>();
+            foreach (var s in list_sessions)
+            {
+                resp.Add(new SessionResponse(s));
+            }
+            return HttpContext.SendDataAsync(new SessionGetResponse(resp));
+        }
+
         [Route(HttpVerbs.Post, BaseRoutes.create_user)]
         public async Task createUser(){
             // has a valid CSRF token
@@ -85,29 +116,23 @@ namespace opcRESTconnector{
             Console.WriteLine(data.ToString());
             // check if data are correct
             if(String.IsNullOrEmpty(data.userName) || !Utils.isEmail(data.email) || data.getRole() == AuthRoles.Undefined) 
-                {await HttpContext.SendDataAsync(new httpErrorData {ErrorMessage = "Bad Data"}); return;}
+                {await HttpContext.SendDataAsync(new ErrorData {ErrorMessage = "Bad Data"}); return;}
 
             string pw = UserData.GeneratePW();
             var db_user = new UserData(data.userName, pw, data.getRole(), data.duration_days);
             db_user.fullName = data.fullName;
             db_user.email = data.email;
 
-            if( store.users.Insert(db_user).IsNull ) {await HttpContext.SendDataAsync(new httpErrorData {ErrorMessage = "User Exist"}); return;}
+            if( store.users.Insert(db_user).IsNull ) {await HttpContext.SendDataAsync(new ErrorData {ErrorMessage = "User Exist"}); return;}
 
             string output = JsonConvert.SerializeObject(db_user);
 
             Console.WriteLine(output);
-            
+
             var isMailSend = await sendMail(db_user,pw);
             
-            var usr_resp = new UserResponse()
+            var usr_resp = new UserCreateResponse(db_user)
             {
-                userName = db_user.userName,
-                fullName = db_user.fullName,
-                email = db_user.email,
-                activity_expiry = db_user.activity_expiry.ToUniversalTime().ToString(),
-                password_expiry = db_user.password.expiryUCT.ToString(),
-                role = db_user.role.ToString(),
                 temporary_pw = pw,
                 isSend = isMailSend
             };

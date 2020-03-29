@@ -21,19 +21,19 @@ namespace opcRESTconnector
         }
     }
 
-    public class ReadResponse :httpErrorData{
+    public class ReadResponse :ErrorData{
         public List<NodeValue> Nodes {get;set;}
         public ReadResponse(){
             Nodes = new List<NodeValue>{};
             ErrorMessage = "none";
-            IsError = false;
+            Success = true;
         }
     }
 
-    public class WriteResponse : httpErrorData{
+    public class WriteResponse : ErrorData{
         public WriteResponse(){
             ErrorMessage = "none";
-            IsError = false;
+            Success = true;
         }
     }
 

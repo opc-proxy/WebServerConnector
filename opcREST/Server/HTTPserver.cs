@@ -8,6 +8,7 @@ using System.IO;
 using OpcProxyCore;
 using opcRESTconnector.Session;
 using opcRESTconnector.Data;
+
 namespace opcRESTconnector {
 
     public class HTTPServerBuilder {
@@ -18,12 +19,11 @@ namespace opcRESTconnector {
         /// </summary>
         //// <param name="url"></param>
         /// <returns></returns>
-        public static WebServer CreateWebServer (RESTconfigs conf, serviceManager manager) {
+        public static WebServer CreateWebServer (RESTconfigs conf, serviceManager manager, DataStore app_store) {
             var logger = NLog.LogManager.GetLogger("WebServer");
 
             string url = buildHostURL(conf);
             var server = new WebServer ( o => o.WithUrlPrefix(url).WithMode(HttpListenerMode.EmbedIO));
-            var app_store = new DataStore(conf);
 
             var pino = new UserData("pino","123",AuthRoles.Writer, 1);
             var gino = new UserData("gino","123",AuthRoles.Reader, 1);
@@ -54,6 +54,7 @@ namespace opcRESTconnector {
                 server.WithWebApi (Routes.json, m => m.WithController<nodeJSONController> (()=>{return new nodeJSONController(manager,conf);}));
             
             server.WithWebApi (BaseRoutes.internal_css, m => m.WithController<internalCssController>());
+            server.WithWebApi (BaseRoutes.internal_js, m => m.WithController<internalJSController>());
             
             // STATIC Files
             if(conf.enableStaticFiles) server.WithStaticFolder("/",conf.staticFilesPath,false);
@@ -68,6 +69,7 @@ namespace opcRESTconnector {
                     else logger.Info("Is " + e.NewState.ToString() );
                 };
             }
+
             return server;
         }
 
@@ -82,25 +84,25 @@ namespace opcRESTconnector {
             if(ctx.Request.RawUrl.Contains("api")){
                 switch (ex.StatusCode) {
                     case 401:
-                        await ctx.SendDataAsync (new httpErrorData () { ErrorMessage = "Unauthorized" });
+                        await ctx.SendDataAsync (new ErrorData() { ErrorMessage = "Unauthorized" });
                         break;
                     case 400:
-                        await ctx.SendDataAsync (new httpErrorData () { ErrorMessage = "Bad Request" });
+                        await ctx.SendDataAsync (new ErrorData() { ErrorMessage = "Bad Request" });
                         break;
                     case 403:
-                        await ctx.SendDataAsync (new httpErrorData () { ErrorMessage = "Forbidden" });
+                        await ctx.SendDataAsync (new ErrorData() { ErrorMessage = "Forbidden" });
                         break;
                     case 404:
-                        await ctx.SendDataAsync (new httpErrorData () { ErrorMessage = "Not Found" });
+                        await ctx.SendDataAsync (new ErrorData() { ErrorMessage = "Not Found" });
                         break;
                     case 405:
-                        await ctx.SendDataAsync (new httpErrorData () { ErrorMessage = "Not Allowed" });
+                        await ctx.SendDataAsync (new ErrorData() { ErrorMessage = "Not Allowed" });
                         break;
                     case 500:
-                        await ctx.SendDataAsync (new httpErrorData () { ErrorMessage = "Internal Server Error" });
+                        await ctx.SendDataAsync (new ErrorData() { ErrorMessage = "Internal Server Error" });
                         break;
                     default:
-                        await ctx.SendDataAsync (new httpErrorData () { ErrorMessage = "Uknown Exception" });
+                        await ctx.SendDataAsync (new ErrorData() { ErrorMessage = "Uknown Exception" });
                         break;
                 }
             }

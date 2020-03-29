@@ -20,14 +20,14 @@ namespace opcRESTconnector
 
             foreach(var variable in values){
                 NodeValue val = new NodeValue();
-                val.Name = HTTPescape(variable.name);
+                val.Name = HTMLescape(variable.name);
                 val.Type = variable.systemType.Substring(7).ToLower();
-                val.Value = (variable.value.GetType() ==  typeof(String)) ? HTTPescape((string)variable.value) : variable.value; 
+                val.Value = (variable.value.GetType() ==  typeof(String)) ? HTMLescape((string)variable.value) : variable.value; 
                 val.Timestamp = variable.timestamp.ToUniversalTime().ToString("o");
                 r.Nodes.Add(val);
             }
             r.ErrorMessage = ( status == ReadStatusCode.Ok) ? "none" : "Not Found";
-            r.IsError = ( status != ReadStatusCode.Ok);
+            r.Success = ( status == ReadStatusCode.Ok);
 
             return r;
         }
@@ -42,10 +42,10 @@ namespace opcRESTconnector
             return Task.CompletedTask;
         }
 
-        public static void HTTPescape(ref string input){
+        public static void HTMLescape(ref string input){
             input = WebUtility.HtmlEncode(input);
         }
-        public static string HTTPescape(string input){
+        public static string HTMLescape(string input){
             return WebUtility.HtmlEncode(input);
         }
 
@@ -114,10 +114,10 @@ namespace opcRESTconnector
             var status = await _service.writeToOPCserver(node_name, value);
             
             WriteResponse r = new WriteResponse();
-            r.IsError = (Opc.Ua.StatusCode.IsBad(status[0]));
-            r.ErrorMessage = (r.IsError) ? "Not Found" : "none";
+            r.Success = !(Opc.Ua.StatusCode.IsBad(status[0]));
+            r.ErrorMessage = (!r.Success) ? "Not Found" : "none";
 
-            if(r.IsError) HttpContext.Response.StatusCode = 404;
+            if(!r.Success) HttpContext.Response.StatusCode = 404;
 
             return r;
         }

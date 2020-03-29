@@ -180,19 +180,54 @@ namespace opcRESTconnector {
         }
     }
 
-    public class UserResponse:httpErrorData {
+    public class UserResponse {
         public string userName {get;set;}
         public string role {get;set;}
         public string email {get;set;}
         public string fullName {get;set;}
         public string activity_expiry {get;set;}
         public string password_expiry {get;set;}
+        public string status {get;set;}
+        
+        public UserResponse(){
+            userName = role = email = fullName = activity_expiry = password_expiry = status ="";
+        }
+        public UserResponse(UserData usr){
+            userName = Utils.HTMLescape(usr.userName);
+            role = usr.role.ToString();
+            email = Utils.HTMLescape(usr.email);
+            fullName = Utils.HTMLescape(usr.fullName);
+            activity_expiry = niceDate(usr.activity_expiry);
+            password_expiry = niceDate(usr.password.expiry);
+            status = extractStatus(usr);
+        }
+
+        public string extractStatus(UserData u){
+            if(!u.isActive()) return "INACTIVE";
+            else if(!u.password.isActive()) return "PWD EXPIRED";
+            return "ACTIVE";
+        }
+
+        public static string niceDate(DateTime d){
+            if(d.ToUniversalTime().Ticks < DateTime.UtcNow.Ticks) return "Expired";
+            string t = d.ToUniversalTime().ToLongDateString();
+            var s = new List<string>(t.Split(','));
+            s.RemoveAt(0);
+            s.Add(d.ToUniversalTime().ToShortTimeString());
+            return string.Join(" ",s);
+        }
+    }
+
+    public class UserCreateResponse: ErrorData{
+        public UserResponse user {get;set;}
         public string temporary_pw {get;set;}
         public bool isSend {get;set;}
-        public UserResponse(){
-            userName = role = email = fullName = activity_expiry = password_expiry = temporary_pw = "";
-            IsError = false;
+
+        public UserCreateResponse(UserData usr){
+            user = new UserResponse(usr);
+            Success = true;
             ErrorMessage = "";
+            temporary_pw = "";
             isSend = false;
         }
     }

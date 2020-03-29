@@ -6,8 +6,8 @@ namespace opcRESTconnector{
 
     public class HTMLtemplates{
         public static string loginPage(string token, string message, string user="", string recaptchaClientKey =""){
-            Utils.HTTPescape(ref message);
-            Utils.HTTPescape(ref user);
+            Utils.HTMLescape(ref message);
+            Utils.HTMLescape(ref user);
             return $@"
             <!DOCTYPE html>
             <html lang='en'>
@@ -51,7 +51,7 @@ namespace opcRESTconnector{
         }
 
         public static string forbidden(string redirectTo){
-            Utils.HTTPescape(ref redirectTo);
+            Utils.HTMLescape(ref redirectTo);
             return $@"
             <!DOCTYPE html>
             <html lang='en'>
@@ -76,8 +76,8 @@ namespace opcRESTconnector{
 
     
         public static string updatePW(string token, string user, string error = ""){
-            Utils.HTTPescape(ref user);
-            Utils.HTTPescape(ref error);
+            Utils.HTMLescape(ref user);
+            Utils.HTMLescape(ref error);
             return $@"
                 <!DOCTYPE html>
                 <html lang='en'>
@@ -115,9 +115,9 @@ namespace opcRESTconnector{
         }
 
         public static string writeAccess(string token, string user, string referrer="", string error =""){
-            Utils.HTTPescape(ref user);
-            Utils.HTTPescape(ref referrer);
-            Utils.HTTPescape(ref error);
+            Utils.HTMLescape(ref user);
+            Utils.HTMLescape(ref referrer);
+            Utils.HTMLescape(ref error);
             return $@"
                 <!DOCTYPE html>
                 <html lang='en'>

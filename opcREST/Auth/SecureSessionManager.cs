@@ -54,7 +54,8 @@ namespace opcRESTconnector.Session
             lock (store)
             {
                 if (string.IsNullOrEmpty(id)) return session;
-                var db_session = store.sessions.GetAndUpdateLastSeen(id);
+                var ip = context.Request.RemoteEndPoint.ToString();
+                var db_session = store.sessions.GetAndUpdateLastSeen(id,ip);
                 if(db_session == null) return session;
                 
                 session = new SimpleSession(db_session);
@@ -73,7 +74,9 @@ namespace opcRESTconnector.Session
 
         public SimpleSession RegisterSession(IHttpContext context, UserData user){
             logger.Debug("Registering Session");
-            var db_session = new sessionData(user, _conf.sessionExpiryHours / 24);
+            var ip = context.Request.RemoteEndPoint.ToString();
+            var agent = context.Request.UserAgent;
+            var db_session = new sessionData(user, _conf.sessionExpiryHours / 24, agent, ip);
             string id = store.sessions.Insert(db_session);
             if(String.IsNullOrEmpty(id)) return new SimpleSession();
             

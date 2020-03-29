@@ -14,6 +14,8 @@ namespace opcRESTconnector
         public DateTime expiry {get;set;}
         public DateTime last_seen {get;set;}
         public DateTime write_expiry {get; set;}
+        public string user_agent {get;set;}
+        public string ip {get;set;}
 
         public DateTime expiryUTC{
             get {
@@ -27,12 +29,16 @@ namespace opcRESTconnector
             expiry = DateTime.UtcNow;
             last_seen = DateTime.UtcNow;
             write_expiry = DateTime.UtcNow;
+            user_agent = "";
+            ip = "";
         }
-        public sessionData(UserData input_user , double expiry_days ){
+        public sessionData(UserData input_user , double expiry_days, string agent, string _ip ){
             user = input_user;
             expiry = DateTime.UtcNow.AddDays(expiry_days);
             last_seen = DateTime.UtcNow;
             write_expiry = DateTime.UtcNow;
+            ip = _ip;
+            user_agent = agent;
         }
 
         public UsrStatusCodes AllowWrite(string pw, double duration_minutes){
@@ -58,5 +64,36 @@ namespace opcRESTconnector
             return user.role != AuthRoles.Undefined;
         }
 
+    }
+
+    public class SessionResponse {
+        public string userName {get;set;}
+        public string expiry {get;set;}
+        public string last_seen {get;set;}
+        public string user_agent {get;set;}
+        public string ip {get;set;}
+        
+        public SessionResponse(sessionData s){
+            userName = Utils.HTMLescape(s.user.userName);
+            expiry = UserResponse.niceDate(s.expiryUTC);
+            last_seen = niceDateNow(s.last_seen);
+            user_agent = s.user_agent;
+            ip = s.ip;
+        }
+        public static string niceDateNow(DateTime d){
+            if( ( DateTime.UtcNow - d.ToUniversalTime()).CompareTo(TimeSpan.FromMinutes(5)) <= 0 ) return "Now";
+            string t = d.ToUniversalTime().ToLongDateString();
+            var s = new List<string>(t.Split(','));
+            s.RemoveAt(0);
+            s.Add(d.ToUniversalTime().ToShortTimeString());
+            return string.Join(" ",s);
+        }
+    }
+    public class SessionGetResponse : ErrorData{
+        public List<SessionResponse> sessions {get;set;}
+        public SessionGetResponse(List<SessionResponse> resp =null){
+            sessions = resp ?? new List<SessionResponse>();
+            Success = true;
+        }
     }
 }

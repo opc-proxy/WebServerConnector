@@ -44,6 +44,89 @@ namespace opcRESTconnector{
         }
         .selfcenter{
             align-self: center;
+        
+        }
+        .tableheader{
+            position: -webkit-sticky;
+            position: sticky; 
+            top: 0;
+            background-color:#FFFF; 
+        }
+        tr.usr_entry{
+            padding : 0.5rem;
+        }
+        tr.usr_entry:hover{
+            background-color: lightblue;
+        }
+        tr.usr_entry[selected]{
+            background-color:lightblue;
+        }
+
+        .view-container{
+            display: flex; 
+            margin-top: 8rem; 
+            justify-content: space-evenly; 
+            flex-wrap: wrap;
+        }
+        .user-table{
+            height: 50vh; 
+            overflow: scroll; 
+        }
+        .session-table{
+            font-size: smaller; 
+            line-height: 1;
+        }
+        th.center{
+            text-align: center;
+        }
+        td.center{
+            text-align: center;
+        }
+        a.pointer{
+            cursor: pointer;
+        }
+        .full-user-agent{
+            display: none;
+            background-color:#ffffff;
+            position: absolute;
+            border: solid 1px lightgrey; 
+            border-radius: 0.5rem;
+            padding:0.5rem;
+        }
+        .full-user-agent[show]{
+            display: block;
+        }
+        .details{
+            flex:0.5; 
+            min-width: 30rem;
+        }
+        .detail-item{
+            display: flex; 
+            justify-content: space-between; 
+            height: 3rem; 
+            align-items: center;
+        }
+
+        nav.errordisplay{
+            display:none;
+            width: 100%;
+            height: 4rem;
+            background-color: #ffe6ff;
+        }
+        nav.errordisplay[show]{
+            display:flex;
+            flex-direction: row;
+            justify-content: center;
+        }
+        nav.navbar{
+            display:flex;
+            align-items: center;
+            width: 100%;
+            height: 5rem;
+            background-color: rebeccapurple;
+            color: white;
+            padding-left: 3rem;
+            padding-right: 3rem;
         }
     ";
     }

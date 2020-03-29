@@ -24,7 +24,7 @@ namespace UserDataStore
         public void Methods()
         {
             var user = new UserData("pino","123",AuthRoles.Reader, 1);
-            var _s =  new sessionData(user,1);
+            var _s =  new sessionData(user,1,"","");
             Assert.True(user.isActive());
             Assert.False(user.password.isActive());
             // user password is expired, but still can validate
@@ -64,7 +64,7 @@ namespace UserDataStore
                 activity_expiry = DateTime.UtcNow.AddDays(1)
             };
 
-            var session = new sessionData(pino,1);
+            var session = new sessionData(pino,1,"","");
             store.users.Upsert(pino);
             store.users.Upsert(gino);
             session_id = store.sessions.Insert(session)?.AsString;
@@ -90,7 +90,7 @@ namespace UserDataStore
             Assert.False(s.hasWriteRights());
             
             // Quick session
-            var session = new sessionData(user, 1);
+            var session = new sessionData(user, 1,"","");
             string s_name = store.sessions.Insert(session);
             // does not modify gino's props
             var gino = store.users.Get("pino");
@@ -104,17 +104,17 @@ namespace UserDataStore
             // it should not is a NoSQL... But you never know
             var gino2 = store.users.Get("pino");
             Assert.Equal(AuthRoles.Reader, gino2.role);
-            Assert.NotNull(store.sessions.GetAndUpdateLastSeen(session_id));
+            Assert.NotNull(store.sessions.GetAndUpdateLastSeen(session_id,""));
         }
         [Fact]
         public void Methods()
         {
             var pino = store.users.Get("pino");
-            var s_pino = new sessionData(pino,1);
+            var s_pino = new sessionData(pino,1,"","");
             var gino = store.users.Get("gino");
-            var s_gino = new sessionData(gino,1);
+            var s_gino = new sessionData(gino,1,"","");
             var none = store.users.Get("none");
-            var s_none = new sessionData(none,1);
+            var s_none = new sessionData(none,1,"","");
 
             Assert.False(s_pino.hasWriteRights());
             Assert.False(s_gino.hasWriteRights());

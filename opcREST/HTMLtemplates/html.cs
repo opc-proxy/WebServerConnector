@@ -153,6 +153,90 @@ namespace opcRESTconnector{
                 ";
         }
 
+        const string admin_suers = @"
+        <!DOCTYPE html>
+<html lang=""en"">
+<head>
+    <meta charset=""UTF-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+    <meta http-equiv=""X-UA-Compatible"" content=""ie=edge"">
+    <script type=""text/javascript"" src=""/_js/htmlescape.js""></script>
+    <script type=""text/javascript"" src=""/utils.js"" ></script>
+    <!--<script type=""text/javascript"" src=""/_js/admin_utils.js"" ></script>-->
+    <link rel=""stylesheet"" type=""text/css"" href=""/_css/milligram.css"">
+    <link rel=""stylesheet"" type=""text/css"" href=""/_css/layout.css"">
+    <title>Test</title>
+</head>
+<body style=""margin:0"">
+    <nav class=""navbar""> 
+        <strong style=""color: yellow;""> OPC-Proxy Admin-Pages </strong> 
+        <strong style=""flex:1; display: flex; justify-content: center; align-items: center;""> 
+            <a style=""color: #ffffff;"" href=""bla"">User-Managment</a> 
+            <div style=""flex: 0.1;""></div>
+            <a style=""color: #ffffff"" href=""bla"">Nodes</a> 
+            <div style=""flex: 0.1;""></div>
+            <a style=""color: #ffffff;"" href=""bla"">IP-Banning</a> 
+            <div style=""flex: 0.1;""></div>
+            <a style=""color: #ffffff;"" href=""bla"">Logs</a> 
+        </strong> 
+        <div > Hello user!</div> 
+    </nav>
+    <nav id=""error-bar"" class=""errordisplay""> 
+        <strong class=""selfcenter"" style=""margin-right: 1rem;""><a>Error:</a> </strong><strong class=""selfcenter"" id=""error-title"" ></strong>
+    </nav>
+    <div >
+    
+    <div class=""view-container"">
+        <div class=""flexcolumn"">
+
+    <div class=""user-table"" >
+            <table style=""width: 100%;"" >
+                <thead class=""tableheader"">
+                    <tr>
+                        <th class=""tableheader"">User Name</th>
+                        <th class=""tableheader"">Full Name</th>
+                        <th class=""tableheader"">Role</th>
+                        <th class=""tableheader"">Status</th>
+                    </tr>
+                </thead>
+                <tbody id=""usr_table""></tbody>
+            </table>
+        </div>
+        <button id=""create-usr-btn"" > + Add user</button>
+        </div>
+        
+        <div class=""flexcolumn details"" id=""details"">
+        </div>
+    </div>
+</div>
+<div class=""nofication-bkg""  id=""notification-bkg"" style=""background-color:rgba(0, 0, 0, 0.7);"">
+    <div class=""box notification"" id=""box-notification"">
+    </div>
+    <button id=""cancel-btn"" style=""width: fit-content; margin-top: 1rem;"">Cancel</button>
+</div>
+    <script>
+            var usr_table = document.querySelector(""#usr_table"");
+            updateUsrTable(usr_table);
+            
+            var add_usr_btn = document.querySelector(""#create-usr-btn"");
+            add_usr_btn.onclick = addUser;
+
+            var notify_box = document.querySelector(""#notification-bkg"");
+
+            var cancel_btn = document.querySelector(""#cancel-btn"");
+            cancel_btn.onclick = ()=>{ 
+                notify_box.removeAttribute(""show"");
+                updateUsrTable(usr_table);
+                doSelection(""__none__"", usr_table);
+                let details = document.querySelector(""#details"");
+                details.innerHTML = '';
+            }
+
+    </script>
+</body>
+</html>
+        ";
+
 
 /*      // test of syntax
   public static string test(bool b){

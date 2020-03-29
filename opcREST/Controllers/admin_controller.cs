@@ -125,11 +125,13 @@ namespace opcRESTconnector{
 
             if( store.users.Insert(db_user).IsNull ) {await HttpContext.SendDataAsync(new ErrorData {ErrorMessage = "User Exist"}); return;}
 
-            string output = JsonConvert.SerializeObject(db_user);
-
-            Console.WriteLine(output);
-
-            var isMailSend = await sendMail(db_user,pw);
+            var isMailSend = false;
+            try{
+                isMailSend = await sendMail(db_user,pw);
+            }
+            catch{
+                isMailSend = false;
+            }
             
             var usr_resp = new UserCreateResponse(db_user)
             {

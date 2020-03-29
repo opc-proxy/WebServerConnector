@@ -56,10 +56,11 @@ namespace opcRESTconnector{
             padding : 0.5rem;
         }
         tr.usr_entry:hover{
-            background-color: lightblue;
+            background-color:lightgrey;
         }
         tr.usr_entry[selected]{
-            background-color:lightblue;
+            background-color: rgba(102,51,153,0.7);
+            color: yellow;
         }
 
         .view-container{
@@ -71,6 +72,7 @@ namespace opcRESTconnector{
         .user-table{
             height: 50vh; 
             overflow: scroll; 
+            max-width: 70rem;
         }
         .session-table{
             font-size: smaller; 
@@ -98,7 +100,8 @@ namespace opcRESTconnector{
         }
         .details{
             flex:0.5; 
-            min-width: 30rem;
+            min-width: 40rem;
+            max-width: 80rem;
         }
         .detail-item{
             display: flex; 
@@ -127,6 +130,28 @@ namespace opcRESTconnector{
             color: white;
             padding-left: 3rem;
             padding-right: 3rem;
+        }
+        .nofication-bkg{
+            display:none;
+            position:fixed; height: 100%; width: 100%;
+            top: 0;
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(2px);  
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1;
+        }
+        .nofication-bkg[show]{
+            display : flex;
+            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .notification{
+            background-color: white;
+        }
+        #create-usr-btn{
+            margin-top: 3rem; margin-bottom:4rem; width: fit-content; align-self: flex-start; 
         }
     ";
     }

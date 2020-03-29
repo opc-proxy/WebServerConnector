@@ -77,8 +77,8 @@ namespace opcRESTconnector
             userName = Utils.HTMLescape(s.user.userName);
             expiry = UserResponse.niceDate(s.expiryUTC);
             last_seen = niceDateNow(s.last_seen);
-            user_agent = s.user_agent;
-            ip = s.ip;
+            user_agent = Utils.HTMLescape(s.user_agent);
+            ip = Utils.HTMLescape(s.ip);
         }
         public static string niceDateNow(DateTime d){
             if( ( DateTime.UtcNow - d.ToUniversalTime()).CompareTo(TimeSpan.FromMinutes(5)) <= 0 ) return "Now";

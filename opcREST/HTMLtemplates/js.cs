@@ -18,7 +18,10 @@ async function postDataJson( url, data ) {
         },
         body: JSON.stringify(data) 
     });
-    return await response.json();
+    if(response.ok) 
+        return await response.json();
+    else 
+        return { Success:false, ErrorMessage:""HTTP Error! Status code: "" + response.status };
 }
 
 async function getUsers(){
@@ -118,6 +121,7 @@ function fillDetailView(sessions){
 
     details.appendChild(buildSessionTable(sessions));
 
+    details.appendChild(build_action_bar());
 }
 
 function buildDetailItem(el_name, el_data){
@@ -189,8 +193,180 @@ function buildSessionItem(session){
     return row;
 }
 
+function addUser(){
+    set_return_btn(""cancel"");
+    build_notify_container(add_user_notify_box());
+}
+
+function build_notify_container(fill){
+    var notify_container = document.querySelector(""#notification-bkg"");
+    var notify_box = document.querySelector(""#box-notification"");
+ 
+    notify_box.innerHTML = '';
+    notify_box.appendChild(fill);
+    notify_container.setAttribute(""show"","""");
+}
+
+function add_user_notify_box(){
+    let form = document.createElement(""form"");
+    form.innerHTML = `
+        <h6 style=""color:red;"" id=""error-display""></h6>
+        <h4><strong>Create User:</strong></h4>
+        <label>User Name</label>
+        <input type=""text"" id=""userName"" placeholder=""username"">
+        <label>E-mail</label>
+        <input type=""text"" id=""email"" placeholder=""e-mail"">
+        <label>Full Name</label>
+        <input type=""text"" id=""fullname"" placeholder=""full name"">
+        <label>Role</label>
+        <select id=""role"" style=""width:10rem; -moz-appearance:menulist; -webkit-appearance:menulist; appearance:menulist;"">
+            <option value=""reader"">Reader</option>
+            <option value=""writer"">Writer</option>
+            <option value=""admin"">Admin</option>
+        </select>
+        <label>User Activity in Days</label>
+        <input style=""width:10rem; display:block;"" type=""number"" id=""duration_days"" min=""0"" max=""9999"">
+        <input type=""submit"" id=""submit"" value=""Add User"">
+    `;
+    var _err = form.querySelector(""#error-display"");
+    var _username = form.querySelector(""#userName"");
+    var _role = form.querySelector(""#role"");
+    var _fullname = form.querySelector(""#fullname"");
+    var _email = form.querySelector(""#email"");
+    var _duration = form.querySelector(""#duration_days"");
+    var btn = form.querySelector(""#submit"");
+
+    form.onsubmit = async (e)=>{
+        e.preventDefault();
+        
+        var data = {
+            userName : _username.value,
+            role :_role.value,
+            fullName : _fullname.value,
+            email : _email.value,
+            duration_days : Number.parseFloat(_duration.value)
+        }
+        console.log(data);
+
+        let resp = await postDataJson(""/admin/users/create"", data)
+        console.log(resp);
+        
+        if(resp.Success){
+            let u_name = escapeHtml(resp.user.userName);
+            let pw = escapeHtml(resp.temporary_pw)
+            form.innerHTML = `
+            <h6><strong> User '<a>${u_name}</a>' Successfully created </strong></h6>
+            ${
+                (resp.isSend) ? 
+                '<h6>E-mail sent to user.</h6>' :
+                '<h6>An E-mail to user could not be sent.</h6>'+
+                '<h6>Please contact user with one-time password: <strong><a>'
+                + pw +'</a></strong></h6>' 
+            }
+            `;
+            set_return_btn(""ok"");
+        }
+        else{
+            _err.innerText = resp.ErrorMessage;
+        }
+
+    }
+
+    return form;
+
+}
+
+function build_action_bar(){
+
+    let div = document.createElement(""div"");
+    div.style = ""display:flex; justify-content:space-between; align-items:center;"";
+    //div.appendChild(build_remove_btn(username));
+    div.appendChild(build_update_btn());
+    //div.appendChild(build_deactivate_btn(username));
+
+    return div;
+}
+
+function build_update_btn(){
+    let btn = document.createElement(""button"");
+    btn.innerText = ""Edit User"";
+    btn.onclick = ()=>{
+        set_return_btn(""cancel"");
+        build_notify_container(update_user_view());
+    }
+    return btn;
+}
+
+function update_user_view(){
+    let form = document.createElement(""form"");
+    let usr = getSelectedUser();
+
+    form.innerHTML = `
+        <h6 style=""color:red;"" id=""error-display""></h6>
+        <h4><strong>Updating User: <a>${escapeHtml(usr.userName)}</a> </strong></h4>
+        <label>E-mail</label>
+        <input type=""text"" id=""email"">
+        <label>Full Name</label>
+        <input type=""text"" id=""fullname"" >
+        <label>Role</label>
+        <select id=""role"" style=""width:10rem; -moz-appearance:menulist; -webkit-appearance:menulist; appearance:menulist;"">
+            <option value=""reader"">Reader</option>
+            <option value=""writer"">Writer</option>
+            <option value=""admin"">Admin</option>
+        </select>
+        <label>Extend User Activity by Number of Days</label>
+        <input style=""width:10rem;"" type=""number"" id=""duration_days"" min=""-1"" max=""9999""> 
+        <h6 style=""display:inline;"">If set to -1, disable the user </h6> <br>
+        <input type=""submit"" id=""submit"" value=""Update User"">
+    `;
+    let _err = form.querySelector(""#error-display"");
+    let _role = form.querySelector(""#role"");
+    let _fullname = form.querySelector(""#fullname"");
+    let _email = form.querySelector(""#email"");
+    let _duration = form.querySelector(""#duration_days"");
+    let btn = form.querySelector(""#submit"");
+
+    _role.value = escapeHtml(usr.role).toLowerCase();
+    _fullname.value = escapeHtml(usr.fullName);
+    _email.value = escapeHtml(usr.email);
+    _duration.value = 0 ;
+    
+    form.onsubmit = async (e)=>{
+        e.preventDefault();
+        
+        let data = {
+            userName : usr.userName,
+            role :_role.value,
+            fullName : _fullname.value,
+            email : _email.value,
+            duration_days : Number.parseFloat(_duration.value)
+        }
+        console.log(data);
+
+        let resp = await postDataJson(""/admin/users/""+usr.userName+""/update"", data)
+        console.log(resp);
+        
+        if(resp.Success){
+            form.innerHTML = `
+            <h6><strong> User '<a>${escapeHtml(usr.userName)}</a>' Successfully Updated </strong></h6>
+            `;
+            set_return_btn(""ok"");
+        }
+        else{
+            _err.innerText = resp.ErrorMessage;
+        }
+    }
+
+    return form;
+}
+
+function set_return_btn(val){
+    var cancel_btn = document.querySelector(""#cancel-btn"");
+    cancel_btn.innerText = val;
+
+}
         ";
-        public const string htmlescape =@"
+    public const string htmlescape =@"
             /*!
  * escape-html
  * Copyright(c) 2012-2013 TJ Holowaychuk

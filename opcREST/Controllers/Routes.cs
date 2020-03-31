@@ -7,8 +7,11 @@ namespace opcRESTconnector {
         public const string write_access = "/write_access";
         public const string update_pw = "/update_pw";
         public const string users = "/users";
+        public const string reset_pw = "/reset_pw";
         public const string create_user = users + "/create";
         public const string read_user = users + "/read";
+        public const string update = "/update";
+        public const string delete = "/delete";
         public const string read_session = users + "/sessions";
         public const string api = "/api";
         public const string internal_css = "/_css";

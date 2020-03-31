@@ -57,6 +57,56 @@ namespace opcRESTconnector {
             return context.SendStringAsync(HTMLtemplates.forbidden(redirectURL),"text/html",Encoding.UTF8);
         }
 
+        public static bool isAdmin(IHttpContext ctx, ref ErrorData err){
+            if( ((sessionData)ctx.Session["session"]).user?.role != AuthRoles.Admin)
+            {
+                ctx.Response.StatusCode = 403; // Forbidden;
+                err.Success = false;
+                err.ErrorCodes.Add("NOT-ADMIN");
+                err.ErrorMessage = "Forbidden";
+                return false;
+            }
+            return true;
+        }
+
+        public static bool isAdmin(IHttpContext ctx){
+            if( ((sessionData)ctx.Session["session"]).user?.role != AuthRoles.Admin)
+            {
+                ctx.Response.StatusCode = 403; // Forbidden;
+                return false;
+            }
+            return true;
+        }
+
+        public static bool isValidUserData(IHttpContext ctx, UserForm data, ref ErrorData err){
+
+            if(data == null ) 
+            { 
+                ctx.Response.StatusCode = 400;
+                err.ErrorMessage += ", Bad Data";
+                err.ErrorCodes.Add(ErrorCodes.BadData); return false; 
+            }
+            if(String.IsNullOrEmpty(data.userName)) err.ErrorCodes.Add(ErrorCodes.BadUsrName);
+            if(!Utils.isEmail(data.email)) err.ErrorCodes.Add(ErrorCodes.BadEmail);
+            if(data.getRole() == AuthRoles.Undefined) err.ErrorCodes.Add(ErrorCodes.BadRole);
+
+            if(err.ErrorCodes.Count >0)  {
+                ctx.Response.StatusCode = 400;
+                err.ErrorMessage += ", Bad Data";
+                return false;
+            }
+            else return true;
+            
+        }
+
+        public static ErrorData errorResponse(IHttpContext ctx, string error, int statuscode){
+            ctx.Response.StatusCode = statuscode;
+            var err = new ErrorData();
+            err.ErrorCodes.Add(error);
+            err.Success = false;
+            return err;
+        }
+
         public static async Task<bool> reCAPTCHA_isValid(string recaptcha, string serverKey){
             var query = new Dictionary<string, string>
             {

@@ -24,13 +24,15 @@ namespace opcRESTconnector {
 
             string url = buildHostURL(conf);
             var server = new WebServer ( o => o.WithUrlPrefix(url).WithMode(HttpListenerMode.EmbedIO));
-
-            var pino = new UserData("pino","123",AuthRoles.Writer, 1);
-            var gino = new UserData("gino","123",AuthRoles.Reader, 1);
+            
+            if(conf.recoveryMode) logger.Warn("Running in recovery mode");
+    
+            //var pino = new UserData("pino","123",AuthRoles.Writer, 1);
+            //var gino = new UserData("gino","123",AuthRoles.Reader, 1);
            // pino.password.expiry = DateTime.UtcNow.AddDays(1);
            // gino.password.expiry = DateTime.UtcNow.AddDays(1);
-            app_store.users.Upsert(pino);
-            app_store.users.Upsert(gino);
+            //app_store.users.Upsert(pino);
+            //app_store.users.Upsert(gino);
 
             // AUTHENTICATION
             if(conf.enableCookieAuth) {

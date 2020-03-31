@@ -3,8 +3,75 @@ using System;
 namespace opcRESTconnector
 {
     public class jsTEmplates{
+    public const string htmlescape =@"
+            /*!
+ * escape-html
+ * Copyright(c) 2012-2013 TJ Holowaychuk
+ * Copyright(c) 2015 Andreas Lubbe
+ * Copyright(c) 2015 Tiancheng 'Timothy' Gu
+ * MIT Licensed
+ */
 
-        public const string admin_utils=@"
+'use strict'
+
+/**
+ * Module variables.
+ * @private
+ */
+
+var matchHtmlRegExp = /[""'&<>]/
+
+
+function escapeHtml (string) {
+  var str = '' + string
+  var match = matchHtmlRegExp.exec(str)
+
+  if (!match) {
+    return str
+  }
+
+  var escape
+  var html = ''
+  var index = 0
+  var lastIndex = 0
+
+  for (index = match.index; index < str.length; index++) {
+    switch (str.charCodeAt(index)) {
+      case 34: // ""
+        escape = '&quot;'
+        break
+      case 38: // &
+        escape = '&amp;'
+        break
+      case 39: // '
+        escape = '&#39;'
+        break
+      case 60: // <
+        escape = '&lt;'
+        break
+      case 62: // >
+        escape = '&gt;'
+        break
+      default:
+        continue
+    }
+
+    if (lastIndex !== index) {
+      html += str.substring(lastIndex, index)
+    }
+
+    lastIndex = index + 1
+    html += escape
+  }
+
+  return lastIndex !== index
+    ? html + str.substring(lastIndex, index)
+    : html
+}
+            ";
+
+
+    public const string admin_utils=@"
         var users = [];
 var selected_usr = ""__none__"";
 
@@ -18,10 +85,13 @@ async function postDataJson( url, data ) {
         },
         body: JSON.stringify(data) 
     });
+    var resp = await response.json();
     if(response.ok) 
-        return await response.json();
-    else 
-        return { Success:false, ErrorMessage:""HTTP Error! Status code: "" + response.status };
+        return resp;
+    else {
+        if(resp) return resp;
+        else return { Success:false, ErrorMessage:""HTTP Error! Status code: "" + response.status };
+    }
 }
 
 async function getUsers(){
@@ -62,20 +132,16 @@ function buildTableElement(data, usr_table){
     let row = document.createElement('tr');
     let col_usr_name = document.createElement('td');
     let col_usr_role = document.createElement('td');
+    col_usr_role.classList.add(""center"");
     let col_full_name = document.createElement('td');
+    col_full_name.classList.add(""center"");
     let col_status = document.createElement('td');
+    col_status.classList.add(""center"");
 
     col_usr_name.innerText = data.userName;
-    col_usr_name.style=""width:25%;""
-    
     col_usr_role.innerText = data.role;
-    col_usr_role.style=""width:25%;""
-
     col_full_name.innerText = data.fullName;
-    col_full_name.style=""width:25%;""
-
     col_status.innerText = data.status;
-    col_status.style=""width:25%;""
 
 
     row.appendChild(col_usr_name);
@@ -225,7 +291,7 @@ function add_user_notify_box(){
             <option value=""admin"">Admin</option>
         </select>
         <label>User Activity in Days</label>
-        <input style=""width:10rem; display:block;"" type=""number"" id=""duration_days"" min=""0"" max=""9999"">
+        <input style=""width:10rem; display:block;"" type=""number"" id=""duration_days"" min=""0"" max=""9999"" value=""100"">
         <input type=""submit"" id=""submit"" value=""Add User"">
     `;
     var _err = form.querySelector(""#error-display"");
@@ -247,8 +313,14 @@ function add_user_notify_box(){
             duration_days : Number.parseFloat(_duration.value)
         }
         console.log(data);
-
+        btn.style=""display:none;""
+        let spinner = build_spinner();
+        spinner.style = ""width:10%; height:10%;""
+        form.appendChild(spinner);
         let resp = await postDataJson(""/admin/users/create"", data)
+        form.removeChild(spinner);
+        btn.style=""display:block;""
+
         console.log(resp);
         
         if(resp.Success){
@@ -279,11 +351,86 @@ function add_user_notify_box(){
 function build_action_bar(){
 
     let div = document.createElement(""div"");
-    div.style = ""display:flex; justify-content:space-between; align-items:center;"";
-    //div.appendChild(build_remove_btn(username));
+    div.style = ""display:flex; justify-content:space-evenly; align-items:center; flex-wrap:wrap; margin-top:3rem;"";
     div.appendChild(build_update_btn());
-    //div.appendChild(build_deactivate_btn(username));
+    div.appendChild(build_reset_pw());
+    div.appendChild(build_remove_btn());
 
+    return div;
+}
+
+function build_spinner(){
+    let spinner = document.createElement(""div"");
+    spinner.classList.add(""loader"");
+    spinner.style = ""margin:0 auto;""
+    return spinner;
+}
+function build_reset_pw(){
+    let btn = document.createElement(""button"");
+    btn.innerText = ""Reset Password"";
+    btn.onclick = async ()=>{
+        
+        set_return_btn(""ok"");
+        build_notify_container(build_spinner());
+
+        let resp = await postDataJson('/admin/users/'+selected_usr+'/reset_pw',{});
+        let h4 = document.createElement(""h4"");
+        console.log(resp);
+        if(resp.Success) {
+            h4.innerHTML = `Password reset successfully for user <a>${escapeHtml(selected_usr)}</a>.<br>
+            ${
+                resp.isSend ? ""E-mail sent to user."" :
+                `E-mail could not be sent. <br> Please contact the user with his one time password: <strong>${escapeHtml(resp.temporary_pw)}</strong>`
+            }
+            `;
+        }
+        else {
+            if(resp.ErrorCodes && resp.ErrorCodes[0])
+                h4.innerText = ""An Error occurred during password reset: "" + escapeHtml(resp.ErrorCodes[0]);
+            else
+                h4.innerText = ""An Error occurred during password reset: "" + escapeHtml(resp.ErrorMessage);
+
+        }
+        build_notify_container(h4);
+    }
+
+    return btn;
+}
+
+function build_remove_btn(){
+    let btn = document.createElement(""button"");
+    btn.innerText = ""Delete User"";
+    btn.onclick = ()=>{
+        set_return_btn(""cancel"");
+        build_notify_container(build_remove_view());
+    }
+
+    return btn;
+}
+
+function build_remove_view(){
+    let div = document.createElement(""div"");
+    let h4 = document.createElement(""h4"");
+    h4.innerHTML = `User <strong><a>${escapeHtml(selected_usr)}</a> </strong> will be permanetly removed from the system, all data will be lost.`
+    let btn = document.createElement(""button"");
+    btn.innerText = ""Continue"";
+    btn.style = ""margin:0 auto; display:block;"";
+    btn.onclick = async ()=>{
+        let resp = await postDataJson('/admin/users/'+selected_usr+'/delete', {});
+        if(resp.Success){
+            btn.style=""display:none"";
+            h4.innerHTML = `User <strong><a>${escapeHtml(selected_usr)}</a> </strong> has been delete.`;
+            set_return_btn(""ok"");
+        }
+        else{
+            btn.style=""display:none"";
+            h4.innerHTML = `An error occurred while deleting the user: <a>${escapeHtml(resp.ErrorCodes[0])}</a>`;
+            set_return_btn(""ok"");
+        }
+    }
+
+    div.appendChild(h4);
+    div.appendChild(btn);
     return div;
 }
 
@@ -343,7 +490,7 @@ function update_user_view(){
         }
         console.log(data);
 
-        let resp = await postDataJson(""/admin/users/""+usr.userName+""/update"", data)
+        let resp = await postDataJson(""/admin/users/""+ usr.userName+""/update"", data)
         console.log(resp);
         
         if(resp.Success){
@@ -366,71 +513,5 @@ function set_return_btn(val){
 
 }
         ";
-    public const string htmlescape =@"
-            /*!
- * escape-html
- * Copyright(c) 2012-2013 TJ Holowaychuk
- * Copyright(c) 2015 Andreas Lubbe
- * Copyright(c) 2015 Tiancheng 'Timothy' Gu
- * MIT Licensed
- */
-
-'use strict'
-
-/**
- * Module variables.
- * @private
- */
-
-var matchHtmlRegExp = /[""'&<>]/
-
-
-function escapeHtml (string) {
-  var str = '' + string
-  var match = matchHtmlRegExp.exec(str)
-
-  if (!match) {
-    return str
-  }
-
-  var escape
-  var html = ''
-  var index = 0
-  var lastIndex = 0
-
-  for (index = match.index; index < str.length; index++) {
-    switch (str.charCodeAt(index)) {
-      case 34: // ""
-        escape = '&quot;'
-        break
-      case 38: // &
-        escape = '&amp;'
-        break
-      case 39: // '
-        escape = '&#39;'
-        break
-      case 60: // <
-        escape = '&lt;'
-        break
-      case 62: // >
-        escape = '&gt;'
-        break
-      default:
-        continue
-    }
-
-    if (lastIndex !== index) {
-      html += str.substring(lastIndex, index)
-    }
-
-    lastIndex = index + 1
-    html += escape
-  }
-
-  return lastIndex !== index
-    ? html + str.substring(lastIndex, index)
-    : html
-}
-            ";
         }
     }

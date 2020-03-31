@@ -59,20 +59,24 @@ namespace opcRESTconnector{
             background-color:lightgrey;
         }
         tr.usr_entry[selected]{
-            background-color: rgba(102,51,153,0.7);
-            color: yellow;
+            background-color: rgba(102,51,153,0.2);
         }
 
         .view-container{
             display: flex; 
             margin-top: 8rem; 
-            justify-content: space-evenly; 
+            justify-content: center; 
             flex-wrap: wrap;
         }
         .user-table{
             height: 50vh; 
-            overflow: scroll; 
+            overflow: auto; 
             max-width: 70rem;
+            min-width: 50rem;
+            border-radius: 1rem;
+            border: solid 1px lightgrey;
+            padding: 2rem;
+            padding-top: 0;
         }
         .session-table{
             font-size: smaller; 
@@ -99,9 +103,9 @@ namespace opcRESTconnector{
             display: block;
         }
         .details{
-            flex:0.5; 
+            flex:1; 
             min-width: 40rem;
-            max-width: 80rem;
+            max-width: 50rem;
         }
         .detail-item{
             display: flex; 
@@ -152,6 +156,27 @@ namespace opcRESTconnector{
         }
         #create-usr-btn{
             margin-top: 3rem; margin-bottom:4rem; width: fit-content; align-self: flex-start; 
+        }
+
+        .loader {
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid #9b4dca;
+        width: 120px;
+        height: 120px;
+        -webkit-animation: spin 1s linear infinite; /* Safari */
+        animation: spin 1s linear infinite;
+        }
+
+        /* Safari */
+        @-webkit-keyframes spin {
+        0% { -webkit-transform: rotate(0deg); }
+        100% { -webkit-transform: rotate(360deg); }
+        }
+
+        @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
         }
     ";
     }

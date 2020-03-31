@@ -31,6 +31,12 @@ namespace opcRESTconnector{
             _conf = conf;
         }
 
+        [Route(HttpVerbs.Get,"/")]
+        public Task admin_page(){
+            if( !AuthUtils.isAdmin(HttpContext)) return  AuthUtils.sendForbiddenTemplate(HttpContext);
+            
+            return HttpContext.SendStringAsync(HTMLtemplates.admin_users,"text/html",Encoding.UTF8); 
+        }
 
         [Route(HttpVerbs.Get,BaseRoutes.write_access)]
         public Task write_access(string override_referer="", string error = ""){
@@ -118,7 +124,7 @@ namespace opcRESTconnector{
             if(String.IsNullOrEmpty(data.userName) || !Utils.isEmail(data.email) || data.getRole() == AuthRoles.Undefined) 
                 {await HttpContext.SendDataAsync(new ErrorData {ErrorMessage = "Bad Data"}); return;}
 
-            string pw = UserData.GeneratePW();
+            string pw = Password.GeneratePW();
             var db_user = new UserData(data.userName, pw, data.getRole(), data.duration_days);
             db_user.fullName = data.fullName;
             db_user.email = data.email;
@@ -140,6 +146,88 @@ namespace opcRESTconnector{
             };
             await HttpContext.SendDataAsync(usr_resp);
 
+        }
+
+
+        [Route(HttpVerbs.Post, BaseRoutes.users + "/{username}/" +BaseRoutes.update)]
+        public async Task<ErrorData> updateUser(string username){
+            ErrorData resp =  new ErrorData(); // success false is default.
+
+            // has a valid CSRF token
+            // if(!_csrf.validateCSRFtoken(HttpContext))   return  AuthUtils.sendForbiddenTemplate(HttpContext);
+            
+            if( !AuthUtils.isAdmin(HttpContext, ref resp)) return resp;
+
+            var data = await HttpContext.GetRequestDataAsync<UserForm>();
+            
+            if(!AuthUtils.isValidUserData(HttpContext,data,ref resp)) return resp;
+            
+            var user = store.users.Get(username);
+            if( user.isAnonymous() ) return AuthUtils.errorResponse(HttpContext,ErrorCodes.UsrNotExist, 400);
+
+            user.email = data.email;
+            user.fullName = data.fullName;
+            user.role = data.getRole();
+            if(data.duration_days > 0 ) 
+                user.activity_expiry = user.activity_expiry.AddDays(data.duration_days);
+            else if(data.duration_days == -1) user.activity_expiry = DateTime.UtcNow;
+
+            if(store.users.Update(user)) 
+            { 
+                resp.Success = true;
+                return resp;
+            }
+            else return AuthUtils.errorResponse(HttpContext,ErrorCodes.DBerror, 400);
+
+        }
+
+
+        [Route(HttpVerbs.Post, BaseRoutes.users + "/{username}/" +BaseRoutes.delete)]
+        public ErrorData deleteUser(string username){
+            ErrorData resp =  new ErrorData(); // success false is default.
+            resp.Success = true;
+
+            // has a valid CSRF token
+            // if(!_csrf.validateCSRFtoken(HttpContext))   return  AuthUtils.sendForbiddenTemplate(HttpContext);
+            
+            if( !AuthUtils.isAdmin(HttpContext, ref resp)) return resp;
+            var user = store.users.Get(username);
+            if(user.isAnonymous()) return AuthUtils.errorResponse(HttpContext,ErrorCodes.UsrNotExist,400);
+
+            if( store.users.Delete(user) ) return resp;
+            else  return AuthUtils.errorResponse(HttpContext,ErrorCodes.DBerror,500);
+            
+        }
+        [Route(HttpVerbs.Post, BaseRoutes.users + "/{username}/" +BaseRoutes.reset_pw)]
+        public async Task<UserCreateResponse> resetPWUser(string username){
+            ErrorData resp =  new ErrorData(); // success false is default.
+            resp.Success = true;
+
+            // has a valid CSRF token
+            // if(!_csrf.validateCSRFtoken(HttpContext))   return  AuthUtils.sendForbiddenTemplate(HttpContext);
+            
+            if( !AuthUtils.isAdmin(HttpContext, ref resp)) return new UserCreateResponse(resp);
+            var user = store.users.Get(username);
+            if(user.isAnonymous()) return new UserCreateResponse(AuthUtils.errorResponse(HttpContext,ErrorCodes.UsrNotExist,400));
+            if(!user.isActive()) return new UserCreateResponse(AuthUtils.errorResponse(HttpContext,ErrorCodes.UsrNotActive,400));
+
+            var new_pw = user.password.resetPassword();
+            store.users.Update(user);
+
+            var isMailSend = false;
+            try{
+                isMailSend = await sendMail(user,new_pw);
+            }
+            catch{
+                isMailSend = false;
+            }
+            var usr_resp = new UserCreateResponse(user)
+            {
+                temporary_pw = new_pw,
+                isSend = isMailSend,
+            };
+
+            return usr_resp;
         }
 
         public async Task<bool> sendMail(UserData user, string pw){

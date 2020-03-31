@@ -153,7 +153,7 @@ namespace opcRESTconnector{
                 ";
         }
 
-        const string admin_suers = @"
+        public const string admin_users = @"
         <!DOCTYPE html>
 <html lang=""en"">
 <head>
@@ -161,13 +161,12 @@ namespace opcRESTconnector{
     <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
     <meta http-equiv=""X-UA-Compatible"" content=""ie=edge"">
     <script type=""text/javascript"" src=""/_js/htmlescape.js""></script>
-    <script type=""text/javascript"" src=""/utils.js"" ></script>
-    <!--<script type=""text/javascript"" src=""/_js/admin_utils.js"" ></script>-->
+    <script type=""text/javascript"" src=""/_js/admin_utils.js"" ></script>
     <link rel=""stylesheet"" type=""text/css"" href=""/_css/milligram.css"">
     <link rel=""stylesheet"" type=""text/css"" href=""/_css/layout.css"">
     <title>Test</title>
 </head>
-<body style=""margin:0"">
+<body style=""margin:0;"">
     <nav class=""navbar""> 
         <strong style=""color: yellow;""> OPC-Proxy Admin-Pages </strong> 
         <strong style=""flex:1; display: flex; justify-content: center; align-items: center;""> 
@@ -179,24 +178,24 @@ namespace opcRESTconnector{
             <div style=""flex: 0.1;""></div>
             <a style=""color: #ffffff;"" href=""bla"">Logs</a> 
         </strong> 
-        <div > Hello user!</div> 
+        <div style=""margin-right:1rem;""> Hello user!</div>
+        <a href=""/auth/logout"">Logout</a>
     </nav>
     <nav id=""error-bar"" class=""errordisplay""> 
         <strong class=""selfcenter"" style=""margin-right: 1rem;""><a>Error:</a> </strong><strong class=""selfcenter"" id=""error-title"" ></strong>
     </nav>
-    <div >
-    
+    <div style=""margin:0; padding-left:1rem; padding-right:1rem;"">
     <div class=""view-container"">
-        <div class=""flexcolumn"">
+        <div class=""flexcolumn"" style=""margin-right:7rem;"">
 
     <div class=""user-table"" >
-            <table style=""width: 100%;"" >
+            <table >
                 <thead class=""tableheader"">
                     <tr>
                         <th class=""tableheader"">User Name</th>
-                        <th class=""tableheader"">Full Name</th>
-                        <th class=""tableheader"">Role</th>
-                        <th class=""tableheader"">Status</th>
+                        <th class=""tableheader center"">Full Name</th>
+                        <th class=""tableheader center"">Role</th>
+                        <th class=""tableheader center"">Status</th>
                     </tr>
                 </thead>
                 <tbody id=""usr_table""></tbody>
@@ -204,7 +203,7 @@ namespace opcRESTconnector{
         </div>
         <button id=""create-usr-btn"" > + Add user</button>
         </div>
-        
+
         <div class=""flexcolumn details"" id=""details"">
         </div>
     </div>

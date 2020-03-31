@@ -77,6 +77,7 @@ namespace opcRESTconnector {
             var out_ = $@"
             User Name : {this.userName}
             Role      : {this.role}
+            Expiry    : {this.activity_expiry.ToUniversalTime().ToString()}
             ";
             return out_;
         }
@@ -85,12 +86,6 @@ namespace opcRESTconnector {
             return userName == "Anonymous";
         }
 
-        public static string GeneratePW(){
-            byte[] token = new byte[8];
-            var rnd = new RNGCryptoServiceProvider();
-            rnd.GetBytes(token);
-            return  Convert.ToBase64String(token);
-        }
     }
 
     public class Password{
@@ -137,11 +132,23 @@ namespace opcRESTconnector {
             if(String.IsNullOrEmpty(pwd) || String.IsNullOrEmpty(hashedValue) ) return false;
             return BCrypt.Net.BCrypt.Verify(pwd,hashedValue);
         }
+
+        public string resetPassword(){
+            var _pw = GeneratePW();
+            hashedValue = hash(_pw);
+            expiry = DateTime.UtcNow;
+            return _pw;
+        }
         public string hash(string pwd){
             if(String.IsNullOrEmpty(pwd)) return null;
             else  return BCrypt.Net.BCrypt.HashPassword(pwd);
         }
-
+        public static string GeneratePW(){
+            byte[] token = new byte[8];
+            var rnd = new RNGCryptoServiceProvider();
+            rnd.GetBytes(token);
+            return  Convert.ToBase64String(token);
+        }
         
     }
 
@@ -228,6 +235,14 @@ namespace opcRESTconnector {
             Success = true;
             ErrorMessage = "";
             temporary_pw = "";
+            isSend = false;
+        }
+        public UserCreateResponse(ErrorData err){
+            user = null;
+            Success = err.Success;
+            ErrorMessage = err.ErrorMessage;
+            ErrorCodes = err.ErrorCodes;
+            temporary_pw = null;
             isSend = false;
         }
     }

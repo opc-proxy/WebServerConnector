@@ -12,18 +12,24 @@ namespace opcRESTconnector.Data
         }
         
         private void ensureAdminUserExist(bool recoveryMode){
-            var admin = _collection.FindOne(x => x.userName == "admin");
-            // create Admin user if not exist
-            if(admin == null) {
-                admin = new UserData("admin","admin",AuthRoles.Admin, 1 );
-                admin.activity_expiry =  DateTime.MaxValue; // admin is always active, but password expires
-                _collection.Insert(admin);
+            // create Admin user if Collection is empty
+            if(_collection.Count() == 0) {
+                _collection.Insert(createNewAdminUser());
             }
             // Reset password if in recovery mode
-            else if(recoveryMode){
-                admin.password = new Password("admin",0);
-                _collection.Update(admin);
+            if(recoveryMode){
+                var admin = _collection.FindOne(x => x.userName == "admin");
+                if(admin == null) admin = createNewAdminUser();
+                admin.password = new Password("admin",0);  // case forgot PW, ahi ahi!
+                admin.activity_expiry = DateTime.MaxValue; // case deactivated by mistake
+                _collection.Upsert(admin);
             }
+        }
+
+        public UserData createNewAdminUser(){
+            var admin = new UserData("admin","admin",AuthRoles.Admin, 1 );
+            admin.activity_expiry =  DateTime.MaxValue; // admin is always active, but password expires
+            return admin;
         }
 
         public override void ensureIndex(){ /* username is PK, nothing else to index here */ }

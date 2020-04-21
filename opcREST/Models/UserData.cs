@@ -233,15 +233,14 @@ namespace opcRESTconnector {
         public UserCreateResponse(UserData usr){
             user = new UserResponse(usr);
             Success = true;
-            ErrorMessage = "";
+            ErrorCode = "";
             temporary_pw = "";
             isSend = false;
         }
         public UserCreateResponse(ErrorData err){
             user = null;
             Success = err.Success;
-            ErrorMessage = err.ErrorMessage;
-            ErrorCodes = err.ErrorCodes;
+            ErrorCode = err.ErrorCode;
             temporary_pw = null;
             isSend = false;
         }

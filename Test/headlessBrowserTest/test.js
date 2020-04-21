@@ -118,7 +118,7 @@ describe('Write Access',()=>{
 
     resp = await post('/api/REST/MyVariable',"value=9");
     assert.equal(resp.status,403,"POST FORM");
-    resp = await postData('/api/JSON/write',{"name":"MyVariable", value:8});
+    resp = await postData('/api/JSON/write',{"names":["MyVariable"], values:[8]});
     assert.equal(resp.status,403,"POST JSON");
   });
 
@@ -150,7 +150,7 @@ describe('Write Access',()=>{
   it('Can Write', async ()=>{
     let resp = await post('/api/REST/MyVariable',"value=7");
     assert.equal(resp.status,200,"POST FORM");
-    resp = await postData('/api/JSON/write',{"name":"MyVariable", value:8});
+    resp = await postData('/api/JSON/write',{"names":["MyVariable"], values:[8]});
     assert.equal(resp.status,200,"POST JSON");
   });
 
@@ -158,7 +158,7 @@ describe('Write Access',()=>{
     await sleep(1000);
     let resp = await post('/api/REST/MyVariable',"value=7");
     assert.equal(resp.status,403,"POST");
-    resp = await postData('/api/JSON/write',{"name":"MyVariable", value:8});
+    resp = await postData('/api/JSON/write',{"names":["MyVariable"], values:[8]});
     assert.equal(resp.status,403,"POST");
   });
 
@@ -215,7 +215,7 @@ describe('Reader',()=>{
 
     resp = await post('/api/REST/MyVariable',"value=7");
     assert.equal(resp.status,403,"Write URL");
-    resp = await postData('/api/JSON/write',{"name":"MyVariable", value:8});
+    resp = await postData('/api/JSON/write',{"names":["MyVariable"], values:[8]});
     assert.equal(resp.status,403,"WRITE JSON");
   });
 

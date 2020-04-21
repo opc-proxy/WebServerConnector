@@ -122,14 +122,14 @@ namespace opcRESTconnector{
             Console.WriteLine(data.ToString());
             // check if data are correct
             if(String.IsNullOrEmpty(data.userName) || !Utils.isEmail(data.email) || data.getRole() == AuthRoles.Undefined) 
-                {await HttpContext.SendDataAsync(new ErrorData {ErrorMessage = "Bad Data"}); return;}
+                {await HttpContext.SendDataAsync(new ErrorData {ErrorCode = ErrorCodes.BadData}); return;}
 
             string pw = Password.GeneratePW();
             var db_user = new UserData(data.userName, pw, data.getRole(), data.duration_days);
             db_user.fullName = data.fullName;
             db_user.email = data.email;
 
-            if( store.users.Insert(db_user).IsNull ) {await HttpContext.SendDataAsync(new ErrorData {ErrorMessage = "User Exist"}); return;}
+            if( store.users.Insert(db_user).IsNull ) {await HttpContext.SendDataAsync(new ErrorData {ErrorCode = ErrorCodes.UsrExist}); return;}
 
             var isMailSend = false;
             try{

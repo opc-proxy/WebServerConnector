@@ -9,21 +9,10 @@ namespace opcRESTconnector
 /// </summary>
 public class ErrorData {
     public bool Success { get; set; }
-    public string ErrorMessage { get; set;
-        /* FIXME
-        get {
-            string message = "";;
-            foreach (var err in ErrorCodes)
-            {
-                message += err +". ";
-            }
-            return message;
-        }*/
-    }
-    public List<string> ErrorCodes {get;set;}
+    public string ErrorCode {get;set;}
     public ErrorData(){
         Success = false;
-        ErrorCodes = new List<string>();
+        ErrorCode = "";
     }
 
 }
@@ -40,6 +29,15 @@ public class ErrorCodes{
     public const string BadName = "BAD-FULL-NAME";
     public const string BadRole = "BAD-ROLE";
     public const string DBerror = "DB-ERROR";
+    public const string Unauthorized = "NOT-AUTHORIZED";
+    public const string BadRequest = "BAD-REQUEST";
+    public const string Forbidden = "FORBIDDEN";
+    public const string  NotFound = "NOT-FOUND";
+    public const string  NotAllowed = "NOT-ALLOWED";
+    public const string  ServerError = "SERVER-ERROR";
+    public const string  Uknown = "UKNOWN";
+    public const string VarNotExist  = "VAR-NOT-EXIST";
+    public const string  BadValue = "BAD-VALUE";
 
 }
 

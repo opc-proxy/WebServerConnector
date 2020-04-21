@@ -56,9 +56,7 @@ namespace opcRESTconnector{
             
             // validate password
             var _user = session_manager.store.users.Get(user);
-            Console.WriteLine("Active User -1");
-            if(!_user.isActive())  { await AuthUtils.sendForbiddenTemplate(HttpContext); return;}
-            Console.WriteLine("Active User");
+            if(!_user.isActive())  { await logon("username or password invalid", user); return;}
             if( !_user.password.isValid(pw) ) {        
                 await logon("username or password invalid", user);
                 return;

@@ -12,6 +12,7 @@ namespace Test
 {
     public class cookieAuthTest{
         serviceManager s;
+        opcREST rest;
         public cookieAuthTest(){
                   var json = JObject.Parse(@"
                 {
@@ -33,11 +34,6 @@ namespace Test
                         'enableCookieAuth' : true,
                         'writeExpiryMinutes' : 0.015,
                         'appStoreFileName':'cookifile.data',
-                        userAuth : [
-                            ['pino','123','W'],
-                            ['gino','123','R'],
-                            ['paul','1234','A'],
-                        ],
                         enableStaticFiles : true,
                         apyKey : 'pippo',
                         enableAPIkey : false
@@ -47,13 +43,20 @@ namespace Test
 
             s = new serviceManager(json);
 
-            opcREST rest = new opcREST();
+            rest = new opcREST();
             s.addConnector(rest);
             
             Task.Run( () => s.run() );
 
             Console.WriteLine("Warming up...");
-            Thread.Sleep(1000);
+            Thread.Sleep(500);
+            
+            var pino = new UserData("pino","123",AuthRoles.Writer, 1);
+            var gino = new UserData("gino","123",AuthRoles.Reader, 1);
+            rest.app_store.users.Upsert(pino);
+            rest.app_store.users.Upsert(gino);
+
+            Thread.Sleep(500);
             Console.WriteLine("Start Test...");
             
         }
@@ -61,12 +64,7 @@ namespace Test
         [Fact]
         public void test1()
         {   
-            //var res_cookie = adminController.Response.Cookies;
-            //Assert.Empty(res_cookie);
-            //adminController.PreProcessRequest();
-            //adminController.HttpContext = new IHttpContext();
-            //await adminController.logon();
-            //Assert.NotEmpty(res_cookie);
+
             var process = new Process {
               StartInfo = new ProcessStartInfo {
                     FileName = "../../../headlessBrowserTest/node_modules/mocha/bin/mocha",
@@ -84,6 +82,8 @@ namespace Test
             process.BeginErrorReadLine();
             process.WaitForExit();
             Console.WriteLine("done");
+            rest.app_store.db.DropCollection("users");
+            rest.app_store.db.Rebuild();
             
         }
     }

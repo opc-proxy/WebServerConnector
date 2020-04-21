@@ -27,13 +27,6 @@ namespace opcRESTconnector {
             
             if(conf.recoveryMode) logger.Warn("Running in recovery mode");
     
-            //var pino = new UserData("pino","123",AuthRoles.Writer, 1);
-            //var gino = new UserData("gino","123",AuthRoles.Reader, 1);
-           // pino.password.expiry = DateTime.UtcNow.AddDays(1);
-           // gino.password.expiry = DateTime.UtcNow.AddDays(1);
-            //app_store.users.Upsert(pino);
-            //app_store.users.Upsert(gino);
-
             // AUTHENTICATION
             if(conf.enableCookieAuth) {
                 // COOKIE BASED
@@ -86,25 +79,25 @@ namespace opcRESTconnector {
             if(ctx.Request.RawUrl.Contains("api")){
                 switch (ex.StatusCode) {
                     case 401:
-                        await ctx.SendDataAsync (new ErrorData() { ErrorMessage = "Unauthorized" });
+                        await ctx.SendDataAsync (new ErrorData() { ErrorCode = ErrorCodes.Unauthorized });
                         break;
                     case 400:
-                        await ctx.SendDataAsync (new ErrorData() { ErrorMessage = "Bad Request" });
+                        await ctx.SendDataAsync (new ErrorData() { ErrorCode = ErrorCodes.BadRequest });
                         break;
                     case 403:
-                        await ctx.SendDataAsync (new ErrorData() { ErrorMessage = "Forbidden" });
+                        await ctx.SendDataAsync (new ErrorData() { ErrorCode = ErrorCodes.Forbidden });
                         break;
                     case 404:
-                        await ctx.SendDataAsync (new ErrorData() { ErrorMessage = "Not Found" });
+                        await ctx.SendDataAsync (new ErrorData() { ErrorCode = ErrorCodes.NotFound });
                         break;
                     case 405:
-                        await ctx.SendDataAsync (new ErrorData() { ErrorMessage = "Not Allowed" });
+                        await ctx.SendDataAsync (new ErrorData() { ErrorCode = ErrorCodes.NotAllowed });
                         break;
                     case 500:
-                        await ctx.SendDataAsync (new ErrorData() { ErrorMessage = "Internal Server Error" });
+                        await ctx.SendDataAsync (new ErrorData() { ErrorCode = ErrorCodes.ServerError });
                         break;
                     default:
-                        await ctx.SendDataAsync (new ErrorData() { ErrorMessage = "Uknown Exception" });
+                        await ctx.SendDataAsync (new ErrorData() { ErrorCode = ErrorCodes.Uknown });
                         break;
                 }
             }

@@ -62,8 +62,7 @@ namespace opcRESTconnector {
             {
                 ctx.Response.StatusCode = 403; // Forbidden;
                 err.Success = false;
-                err.ErrorCodes.Add("NOT-ADMIN");
-                err.ErrorMessage = "Forbidden";
+                err.ErrorCode = ErrorCodes.NotAdmin;
                 return false;
             }
             return true;
@@ -83,16 +82,14 @@ namespace opcRESTconnector {
             if(data == null ) 
             { 
                 ctx.Response.StatusCode = 400;
-                err.ErrorMessage += ", Bad Data";
-                err.ErrorCodes.Add(ErrorCodes.BadData); return false; 
+                err.ErrorCode = ErrorCodes.BadData; return false; 
             }
-            if(String.IsNullOrEmpty(data.userName)) err.ErrorCodes.Add(ErrorCodes.BadUsrName);
-            if(!Utils.isEmail(data.email)) err.ErrorCodes.Add(ErrorCodes.BadEmail);
-            if(data.getRole() == AuthRoles.Undefined) err.ErrorCodes.Add(ErrorCodes.BadRole);
+            if(String.IsNullOrEmpty(data.userName)) err.ErrorCode = ErrorCodes.BadUsrName;
+            else if(!Utils.isEmail(data.email)) err.ErrorCode = ErrorCodes.BadEmail;
+            else if(data.getRole() == AuthRoles.Undefined) err.ErrorCode = ErrorCodes.BadRole;
 
-            if(err.ErrorCodes.Count >0)  {
+            if(err.ErrorCode != "")  {
                 ctx.Response.StatusCode = 400;
-                err.ErrorMessage += ", Bad Data";
                 return false;
             }
             else return true;
@@ -102,7 +99,7 @@ namespace opcRESTconnector {
         public static ErrorData errorResponse(IHttpContext ctx, string error, int statuscode){
             ctx.Response.StatusCode = statuscode;
             var err = new ErrorData();
-            err.ErrorCodes.Add(error);
+            err.ErrorCode = error;
             err.Success = false;
             return err;
         }

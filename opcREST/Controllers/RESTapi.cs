@@ -14,24 +14,7 @@ using System.Net.Mail;
 namespace opcRESTconnector
 {
     public class Utils{
-        public static ReadResponse packReadNodes(dbVariableValue[] values, ReadStatusCode status){
-
-            ReadResponse r = new ReadResponse();
-
-            foreach(var variable in values){
-                NodeValue val = new NodeValue();
-                val.Name = HTMLescape(variable.name);
-                val.Type = variable.systemType.Substring(7).ToLower();
-                val.Value = (variable.value.GetType() ==  typeof(String)) ? HTMLescape((string)variable.value) : variable.value; 
-                val.Timestamp = variable.timestamp.ToUniversalTime().ToString("o");
-                r.Nodes.Add(val);
-            }
-            r.ErrorMessage = ( status == ReadStatusCode.Ok) ? "none" : "Not Found";
-            r.Success = ( status == ReadStatusCode.Ok);
-
-            return r;
-        }
-
+       
         /// <summary>
         /// Wrapper for HttpContext.Redirect() Status code 303
         /// </summary>
@@ -74,21 +57,21 @@ namespace opcRESTconnector
 
 
         [Route(HttpVerbs.Get, "/{node_name}")]
-        public  ReadResponse GetNode(string node_name){
+        public  async Task<ReadResponse> GetNode(string node_name){
             
             var _session = (sessionData) HttpContext.Session?["session"];
             if(_conf.enableCookieAuth && (_session == null || !_session.hasReadRights()))
                 throw HttpException.Forbidden();
 
-           try{
-                List<string> names = new List<string>{ node_name };
-                ReadStatusCode status;
-                var values =  _service.readValueFromCache(names.ToArray(),out status);
-                if(status != ReadStatusCode.Ok) HttpContext.Response.StatusCode = 404;
-                return Utils.packReadNodes(values,status);
+           try
+           {
+                string[] names = new string[1]{ node_name };
+                var values = await _service.readValueFromCache(names);
+                var response = new ReadResponse(values[0]);
+                return response;
            }
-            catch(Exception ex){
-                Console.WriteLine(ex.Message);
+            catch
+            {
                 throw HttpException.BadRequest();
             }
         }
@@ -111,15 +94,17 @@ namespace opcRESTconnector
                 throw HttpException.BadRequest();
                     
             var value = data.Get("value");
-            var status = await _service.writeToOPCserver(node_name, value);
-            
-            WriteResponse r = new WriteResponse();
-            r.Success = !(Opc.Ua.StatusCode.IsBad(status[0]));
-            r.ErrorMessage = (!r.Success) ? "Not Found" : "none";
 
-            if(!r.Success) HttpContext.Response.StatusCode = 404;
-
-            return r;
+            try
+            {
+                var writeResp = await _service.writeToOPCserver(new string[]{node_name}, new object[]{value});
+                var response = new WriteResponse(writeResp[0]);
+                return response;
+            }
+            catch
+            {
+                throw HttpException.BadRequest();
+            }
         }
 
 

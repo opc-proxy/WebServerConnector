@@ -6,6 +6,7 @@ using System;
 using OpcProxyCore;
 using Newtonsoft.Json.Linq;
 using opcRESTconnector.Session;
+using System.Collections.Generic;
 
 namespace opcRESTconnector
 {
@@ -24,7 +25,7 @@ namespace opcRESTconnector
 
 
         [Route(HttpVerbs.Post, "/read")]
-        public async Task<ReadResponse> GetNodes(){
+        public async Task<List<ReadResponse>> GetNodes(){
             
             // Check if Authorized
             var _session = (sessionData) HttpContext.Session?["session"];
@@ -51,17 +52,20 @@ namespace opcRESTconnector
             // validity check
             if (_conf.enableAPIkey && data.apiKey != _conf.apyKey)
                 throw HttpException.Forbidden();
-
-            ReadStatusCode status;
-            var values = _service.readValueFromCache(data.names.ToArray(), out status);
-            if (status != ReadStatusCode.Ok) HttpContext.Response.StatusCode = 404;
-            return Utils.packReadNodes(values, status);
-
+            try{
+                var values = await _service.readValueFromCache(data.names.ToArray());
+                var response = new List<ReadResponse>();
+                values.ForEach(val => response.Add(new ReadResponse(val)) );
+                return response;
+            }    
+            catch{
+                throw HttpException.Forbidden();
+            }
         }
 
         
         [Route(HttpVerbs.Post, "/write")]
-         public async Task<WriteResponse> PostData() 
+         public async Task<List<WriteResponse>> PostData() 
         {
             var _session = (sessionData) HttpContext.Session?["session"];
             // Check if Authorized
@@ -84,18 +88,19 @@ namespace opcRESTconnector
             if(_conf.enableAPIkey &&  data.apiKey != _conf.apyKey )  
                 throw HttpException.Forbidden();
 
-            if(data.value == null || data.name == "") 
+            if(data.values.Count == 0 || data.names.Count != data.values.Count ) 
                 throw HttpException.BadRequest();
-                    
-            var status = await _service.writeToOPCserver(data.name, data.value);
-            
-            WriteResponse r = new WriteResponse();
-            r.Success = !(Opc.Ua.StatusCode.IsBad(status[0]));
-            r.ErrorMessage = (!r.Success) ? "Not Found" : "none";
-
-            if(!r.Success) HttpContext.Response.StatusCode = 404;
-
-            return r;
+            try
+            {
+                var writeResp = await _service.writeToOPCserver(data.names.ToArray(), data.values.ToArray());
+                var response = new List<WriteResponse>();
+                writeResp.ForEach( w => response.Add(new WriteResponse(w)) );
+                return response;
+            }
+            catch
+            {
+                throw HttpException.BadRequest();
+            }
         }
 
 

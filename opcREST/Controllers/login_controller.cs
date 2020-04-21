@@ -66,7 +66,17 @@ namespace opcRESTconnector{
             session_manager.Delete(HttpContext,"");
 
             var current_session = session_manager.RegisterSession(HttpContext,_user);
-            HttpContext.Redirect("/",303);
+            var csrf_local = "";
+            
+            if(!String.IsNullOrEmpty(current_session.Id)){
+                var db_session = (sessionData) current_session["session"];
+                csrf_local = _csrf.generateRandomToken();
+                db_session.csrf_token = csrf_local;
+                if(!session_manager.store.sessions.Update(db_session)) csrf_local = "";
+            } 
+            var htmlTemplate = HTMLtemplates.setCSRFtoLocalStorege(csrf_local);
+            await HttpContext.SendStringAsync( htmlTemplate,"text/html",Encoding.UTF8);
+            //await Utils.HttpRedirect(HttpContext,"/");
         }
 
         

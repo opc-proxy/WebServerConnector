@@ -16,6 +16,7 @@ namespace opcRESTconnector
         public DateTime write_expiry {get; set;}
         public string user_agent {get;set;}
         public string ip {get;set;}
+        public string csrf_token {get;set;}
 
         public DateTime expiryUTC{
             get {
@@ -31,6 +32,7 @@ namespace opcRESTconnector
             write_expiry = DateTime.UtcNow;
             user_agent = "";
             ip = "";
+            csrf_token = "";
         }
         public sessionData(UserData input_user , double expiry_days, string agent, string _ip ){
             user = input_user;
@@ -39,6 +41,7 @@ namespace opcRESTconnector
             write_expiry = DateTime.UtcNow;
             ip = _ip;
             user_agent = agent;
+            csrf_token = "";
         }
 
         public UsrStatusCodes AllowWrite(string pw, double duration_minutes){
@@ -64,6 +67,11 @@ namespace opcRESTconnector
             return user.role != AuthRoles.Undefined;
         }
 
+        public bool isValidToken(string token)
+        {
+            if(!hasReadRights()) return false;
+            return (csrf_token == token) ;
+        }
     }
 
     public class SessionResponse {

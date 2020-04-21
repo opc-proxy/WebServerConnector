@@ -45,6 +45,8 @@ namespace opcRESTconnector {
             if( string.IsNullOrEmpty(context.Session.Id) ) return AuthUtils.sendForbiddenTemplate(context);
             // if Id is not empty then "session" is also filled (no need to tryGet)
             var session = (sessionData) context.Session["session"];
+            // case session expired but not cleared yet (default is 30 sec)
+            if(session?.expiryUTC.Ticks < DateTime.UtcNow.Ticks) return AuthUtils.sendForbiddenTemplate(context);
             var user = session?.user;
             if(user == null) return AuthUtils.sendForbiddenTemplate(context);
             if( !user.isActive() ) return AuthUtils.sendForbiddenTemplate(context);
@@ -133,7 +135,7 @@ namespace opcRESTconnector {
         string salt;
         string secret;
         public static NLog.Logger logger = null;
-
+        RNGCryptoServiceProvider rnd;
         public CSRF_utils(){
             
             logger = LogManager.GetLogger(this.GetType().Name);
@@ -141,9 +143,16 @@ namespace opcRESTconnector {
             csrf_gen = new AntiCSRF.AntiCSRF(csrf_conf);
             salt = "XYfday567D";
             byte[] token = new byte[32];
-            var rnd = new RNGCryptoServiceProvider();
+            rnd = new RNGCryptoServiceProvider();
             rnd.GetBytes(token);
             secret = Convert.ToBase64String(token);
+        }
+
+        public string generateRandomToken()
+        {
+            byte[] token = new byte[64];
+            rnd.GetBytes(token);
+            return  Convert.ToBase64String(token);
         }
 
         /// <summary>

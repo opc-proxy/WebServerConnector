@@ -57,6 +57,12 @@ describe('Login page', function() {
       assert.isNotNull(c,"Has session cookie");
     });
 
+    it('Has csrf in localstorage', ()=>{
+      let c = browser.localStorage('localhost').getItem("csrfToken");
+      assert.isNotNull(c,"Has csrf token");
+      assert.isAbove(c.length,10);
+    });
+
 });
 
 describe('Force Password update',()=>{

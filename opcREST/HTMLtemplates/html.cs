@@ -50,6 +50,26 @@ namespace opcRESTconnector{
             ";
         }
 
+    public static string setCSRFtoLocalStorege(string token, string redirect ="/")
+    {
+        return $@"
+        <!DOCTYPE html>
+            <html lang='en'>
+            <head>
+                <meta charset='UTF-8'>
+                <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+                <script>
+                    localStorage.setItem(""csrfToken"",""{token}"");
+                </script>
+                <meta http-equiv='refresh' content='0; url={redirect}'>
+                <title>login</title>
+            </head>
+            <body>
+            </body>
+            </html>
+        ";
+    }
         public static string forbidden(string redirectTo){
             Utils.HTMLescape(ref redirectTo);
             return $@"

@@ -37,13 +37,15 @@ namespace Test
                         serverLog:false,
                         port : 8089,
                         urlPrefix : '',
-                        enableBasicAuth : false,
                         enableStaticFiles : false,
-                        apyKey : 'pippo',
-                        enableAPIkey : true
+                        envVars: {
+                            recaptchaClientKey : 'ciao'
+                        }
                     }
                 }
             ");
+            
+            Environment.SetEnvironmentVariable("OPC_WEBSERVER_APIKEY","1234567");
 
             s = new serviceManager(json);
 
@@ -55,7 +57,12 @@ namespace Test
 
             Console.WriteLine("Warming up...");
             Thread.Sleep(1000);
+            Console.WriteLine("API key " + rest._conf.GetEnvVars().apiKey);
+            Console.WriteLine("OPC_WEBSERVER_SENDGRID " + rest._conf.GetEnvVars().sendGridAPIkey);
+            Console.WriteLine("OPC_WEBSERVER_SENDGRID " + Environment.GetEnvironmentVariable("OPC_WEBSERVER_SENDGRID"));
             Console.WriteLine("Start Test...");
+            Assert.Equal("",rest._conf.GetEnvVars().recaptchaClientKey);
+            Assert.Equal("1234567",rest._conf.GetEnvVars().apiKey);
 
         }
 
@@ -69,8 +76,10 @@ namespace Test
 
     public class APItests:IClassFixture<startServer>{
         public HttpClient http;
+        public serviceManager service;
         public APItests(startServer s){
             this.http = s.client;
+            this.service = s.s;
         }
 
         [Fact]
@@ -124,10 +133,10 @@ namespace Test
         {
             var query = new Dictionary<string, string>{
                 { "value", "10" },
-                { "apiKey", "pippo" }
             };
 
             var goodReq = new FormUrlEncodedContent(query);
+            goodReq.Headers.Add("X-API-Token", "1234567");
             var response = await http.PostAsync("http://localhost:8089/api/REST/MyVariable", goodReq);
             var body = JObject.Parse(await response.Content.ReadAsStringAsync()).ToObject<WriteResponse>();
 
@@ -146,20 +155,20 @@ namespace Test
             // no apikey or wrong key -> not authorized
             var query2 = new Dictionary<string, string>{
                 { "value", "10" },
-                { "apiKey", "popo" }
             };
             var badReq = new FormUrlEncodedContent(query2);
+            badReq.Headers.Add("X-API-Token", "123456ew7");
             response = await http.PostAsync("http://localhost:8089/api/REST/MyVariable", badReq);
             var body2 = JObject.Parse(await response.Content.ReadAsStringAsync()).ToObject<ErrorData>();
             Assert.Equal(System.Net.HttpStatusCode.Forbidden, response.StatusCode);
             Assert.Equal(ErrorCodes.Forbidden, body2.ErrorCode);
 
-            // Bad variable value  --- here return not found, there is an issue about it already
+            // Bad variable value
             var query3 = new Dictionary<string, string>{
                 { "value", "abc" },
-                { "apiKey", "pippo" }
             };
             var badReq3 = new FormUrlEncodedContent(query3);
+            badReq3.Headers.Add("X-API-Token", "1234567");
             response = await http.PostAsync("http://localhost:8089/api/REST/MyVariable", badReq3);
             var body3 = JObject.Parse(await response.Content.ReadAsStringAsync()).ToObject<WriteResponse>();
             Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
@@ -170,7 +179,8 @@ namespace Test
         public async void jsonGET(){
             
             // Success if all is good
-            var  Req = new StringContent("{names:['MyVariable'], apiKey:'pippo'}", Encoding.UTF8, "application/json");
+            var  Req = new StringContent("{names:['MyVariable']}", Encoding.UTF8, "application/json"); 
+            Req.Headers.Add("X-API-Token","1234567");
             var response = await http.PostAsync("http://localhost:8089/api/JSON/read", Req);
             //var js_string = "'"+(await response.Content.ReadAsStringAsync())+"'";
             //var js_string = "[{\"Type\": \"double\",\"Timestamp\": \"4\\/21\\/2020 3:21:36 PM\",\"Timestamp_ms\": 1587482496470,\"Name\": \"MyVariable\",\"Value\": 23.80000000000009,\"Success\": true,\"ErrorCode\": \"\"}]";
@@ -182,7 +192,8 @@ namespace Test
             Assert.True(resp[0].Value != null);
 
             // one var not found but still returning the other
-            Req = new StringContent("{names:['MyVariable','notExist'], apiKey:'pippo'}", Encoding.UTF8, "application/json");
+            Req = new StringContent("{names:['MyVariable','notExist']}", Encoding.UTF8, "application/json");
+            Req.Headers.Add("X-API-Token","1234567");
             response = await http.PostAsync("http://localhost:8089/api/JSON/read", Req);
             
             Assert.True(response.IsSuccessStatusCode);
@@ -193,7 +204,8 @@ namespace Test
             Assert.Equal(ErrorCodes.VarNotExist, resp[1].ErrorCode);
 
             // fail if apiKey not provided
-            Req = new StringContent("{names:['MyVariable'], apiKey:'pipo'}", Encoding.UTF8, "application/json");
+            Req = new StringContent("{names:['MyVariable']}", Encoding.UTF8, "application/json");
+            Req.Headers.Add("X-API-Token","123456fd7");
             response = await http.PostAsync("http://localhost:8089/api/JSON/read", Req);
 
             Assert.Equal(System.Net.HttpStatusCode.Forbidden, response.StatusCode);
@@ -205,7 +217,8 @@ namespace Test
         public async void jsonPOST()
         {
             // Success if all is good
-            var  Req = new StringContent("{names:['MyVariable'], apiKey:'pippo', values:[32]}", Encoding.UTF8, "application/json");
+            var  Req = new StringContent("{names:['MyVariable'], values:[32]}", Encoding.UTF8, "application/json");
+            Req.Headers.Add("X-API-Token","1234567");
             var response = await http.PostAsync("http://localhost:8089/api/JSON/write", Req);
             var resp = JsonSerializer.Deserialize<List<WriteResponse>>(await response.Content.ReadAsStringAsync());
 
@@ -214,26 +227,30 @@ namespace Test
             Assert.Equal("", resp[0].ErrorCode);
 
             // not found if var does not exist
-            Req = new StringContent("{names:['MyVaable'], apiKey:'pippo', values:[32]}", Encoding.UTF8, "application/json");
+            Req = new StringContent("{names:['MyVaable'], values:[32]}", Encoding.UTF8, "application/json");
+            Req.Headers.Add("X-API-Token","1234567");
             response = await http.PostAsync("http://localhost:8089/api/JSON/write", Req);
             Assert.True(response.IsSuccessStatusCode);
             resp = JsonSerializer.Deserialize<List<WriteResponse>>(await response.Content.ReadAsStringAsync());
             Assert.Equal(ErrorCodes.VarNotExist, resp[0].ErrorCode);
 
             // bad req if value not provided
-            Req = new StringContent("{names:['MyVariable'], apiKey:'pippo'}", Encoding.UTF8, "application/json");
+            Req = new StringContent("{names:['MyVariable']}", Encoding.UTF8, "application/json");
+            Req.Headers.Add("X-API-Token","1234567");
             response = await http.PostAsync("http://localhost:8089/api/JSON/write", Req);
             Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
 
             // Error if value not right type
-            Req = new StringContent("{names:['MyVariable'], apiKey:'pippo', values:['pollo']}", Encoding.UTF8, "application/json");
+            Req = new StringContent("{names:['MyVariable'],values:['pollo']}", Encoding.UTF8, "application/json");
+            Req.Headers.Add("X-API-Token","1234567");
             response = await http.PostAsync("http://localhost:8089/api/JSON/write", Req);
             resp = JsonSerializer.Deserialize<List<WriteResponse>>(await response.Content.ReadAsStringAsync());
             Assert.Equal(ErrorCodes.BadValue, resp[0].ErrorCode);
             Assert.False(resp[0].Success);
 
             // Forbidden if wrong apiKey
-            Req = new StringContent("{names:['MyVariable'], apiKey:'pppo', values:['7']}", Encoding.UTF8, "application/json");
+            Req = new StringContent("{names:['MyVariable'], values:['7']}", Encoding.UTF8, "application/json");
+            Req.Headers.Add("X-API-Token","123456ew7");
             response = await http.PostAsync("http://localhost:8089/api/JSON/write", Req);
             var resp2 = JsonSerializer.Deserialize<ErrorData>(await response.Content.ReadAsStringAsync());
             Assert.Equal(System.Net.HttpStatusCode.Forbidden, response.StatusCode);

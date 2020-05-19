@@ -33,7 +33,7 @@ namespace opcRESTconnector{
         [Route(HttpVerbs.Get, BaseRoutes.login)]
         public async Task logon(string message="", string user=""){
             var token = _csrf.setCSRFcookie(HttpContext);
-            var htmlTemplate = HTMLtemplates.loginPage(token, message, user, _conf.recaptchaClientKey);
+            var htmlTemplate = HTMLtemplates.loginPage(token, message, user, _conf.GetEnvVars().recaptchaClientKey);
             await HttpContext.SendStringAsync( htmlTemplate,"text/html",Encoding.UTF8);
         }
         
@@ -50,7 +50,7 @@ namespace opcRESTconnector{
 
             // validate reCAPTCHA if enabled
             if(_conf.isRecaptchaEnabled()){
-               var isValid =  await AuthUtils.reCAPTCHA_isValid(reCAPTCHA, _conf.recaptchaServerKey);
+               var isValid =  await AuthUtils.reCAPTCHA_isValid(reCAPTCHA, _conf.GetEnvVars().recaptchaServerKey);
                if(!isValid) { await logon("reCAPTCHA invalid", user); return; }
             }
             

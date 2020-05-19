@@ -39,6 +39,40 @@ namespace opcRESTconnector {
         }
     }
 
+    public class EnsureApiCsrf : WebModuleBase
+    {
+        public static NLog.Logger logger = null;
+        RESTconfigs _conf;
+        public EnsureApiCsrf(string root, RESTconfigs config) : base(root)
+        {
+            logger = LogManager.GetLogger(this.GetType().Name);
+            _conf = config;
+        }
+        public override bool IsFinalHandler => false;
+
+        protected override Task OnRequestAsync(IHttpContext context)
+        {
+            if(context.Request.HttpVerb != HttpVerbs.Post) return Task.CompletedTask;
+            
+            string csrf_token = context.Request.Headers["X-API-Token"] ?? "none";
+            logger.Debug("Token " + csrf_token);
+            if(_conf.enableCookieAuth)
+            {
+                var session = (sessionData) context.Session?["session"];
+                if(session == null) throw HttpException.Forbidden();
+                logger.Debug("Token in session " + session.csrf_token);
+                if( session.csrf_token == csrf_token) return Task.CompletedTask;
+                else throw HttpException.Forbidden();
+            }
+            else 
+            {
+                if(_conf.GetEnvVars().apiKey == "" )        return Task.CompletedTask;;
+                if(_conf.GetEnvVars().apiKey == csrf_token) return Task.CompletedTask;
+            }
+            throw HttpException.Forbidden();
+        }
+    }
+
     public class AuthUtils {
         
         public static Task EnsureActiveUser(IHttpContext context){

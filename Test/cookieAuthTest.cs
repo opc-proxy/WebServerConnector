@@ -34,9 +34,7 @@ namespace Test
                         'enableCookieAuth' : true,
                         'writeExpiryMinutes' : 0.015,
                         'appStoreFileName':'cookifile.data',
-                        enableStaticFiles : true,
-                        apyKey : 'pippo',
-                        enableAPIkey : false
+                        'enableStaticFiles' : true,
                     }
                 }
             ");

@@ -86,9 +86,6 @@ namespace opcRESTconnector
                 throw HttpException.Forbidden();
             
             var data = await HttpContext.GetRequestFormDataAsync();
-            // validity check
-            if(_conf.enableAPIkey && ( !data.ContainsKey("apiKey") || data.Get("apiKey") != _conf.apyKey ))  
-                throw HttpException.Forbidden();
 
             if(!data.ContainsKey("value")) 
                 throw HttpException.BadRequest();

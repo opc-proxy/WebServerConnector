@@ -8,15 +8,10 @@ using System;
 using Newtonsoft.Json.Linq;
 using System.Text;
 using opcRESTconnector.Data;
-using System.Net.Http;
-using System.Threading;
-using opcRESTconnector;
-using OpcProxyCore;
-using Newtonsoft.Json;
-using System.Net.Http.Headers ;
 using System.Net;
 using SendGrid;
 using SendGrid.Helpers.Mail;
+using NLog;
 
 namespace opcRESTconnector{
     public  class AdminController : WebApiController{
@@ -24,11 +19,13 @@ namespace opcRESTconnector{
         DataStore store;     
 
         RESTconfigs _conf;   
+        public static NLog.Logger logger = null;
 
         public AdminController(DataStore data_store, CSRF_utils csrf, RESTconfigs conf){
             _csrf = csrf;
             store = data_store;
             _conf = conf;
+            logger = LogManager.GetLogger(this.GetType().Name);
         }
 
         [Route(HttpVerbs.Get,"/")]
@@ -232,12 +229,13 @@ namespace opcRESTconnector{
 
         public async Task<bool> sendMail(UserData user, string pw){
 
-            Console.WriteLine("Sending e-mail");
+            
+            var apiKey = _conf.GetEnvVars().sendGridAPIkey;
+            if(String.IsNullOrEmpty(apiKey) || String.IsNullOrEmpty(_conf.sendGridEmail)) return false;
 
-            var apiKey = _conf.sendGridAPIkey;
             var client = new SendGridClient(apiKey);
-            var from = new EmailAddress("pan.manfredini@gmail.com", "Admin");
-            var subject = "Registered user";
+            var from = new EmailAddress(_conf.sendGridEmail, "Admin");
+            var subject = "New User Registered";
             var to = new EmailAddress(user.email, user.fullName);
             var plainTextContent = $@"
                 Hello {user.fullName},
@@ -276,6 +274,7 @@ namespace opcRESTconnector{
             ";
             var msg = MailHelper.CreateSingleEmail(from, to, subject, plainTextContent, htmlContent);
             var response = await client.SendEmailAsync(msg);
+            logger.Info("User " + user.userName + " notification e-mail sent to " + to );
             return response.StatusCode == HttpStatusCode.Accepted;
         }
 

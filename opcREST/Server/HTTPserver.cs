@@ -43,6 +43,7 @@ namespace opcRESTconnector {
             }
             
             // API routes
+            server.WithModule(new EnsureApiCsrf(BaseRoutes.api, conf)); // token protection for api
             if(conf.enableREST) 
                 server.WithWebApi (Routes.rest, m => m.WithController<nodeRESTController> (()=>{return new nodeRESTController(manager,conf);}));
             if(conf.enableJSON)

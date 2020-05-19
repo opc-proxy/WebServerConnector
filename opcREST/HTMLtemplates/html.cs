@@ -60,7 +60,7 @@ namespace opcRESTconnector{
                 <meta name='viewport' content='width=device-width, initial-scale=1.0'>
                 <meta http-equiv='X-UA-Compatible' content='ie=edge'>
                 <script>
-                    localStorage.setItem(""csrfToken"",""{token}"");
+                    localStorage.setItem(""API-Token"",""{token}"");
                 </script>
                 <meta http-equiv='refresh' content='0; url={redirect}'>
                 <title>login</title>

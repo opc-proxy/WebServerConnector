@@ -1,6 +1,5 @@
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Linq;
+using System;
+
 namespace opcRESTconnector
 {
     /// <summary>
@@ -31,31 +30,28 @@ namespace opcRESTconnector
         public string urlPrefix {get; set;}
         public bool enableCookieAuth {get; set;}
         public bool enableStaticFiles {get; set;}
-        public bool enableAPIkey {get; set;}
         public bool enableREST {get; set;}
         public bool enableJSON {get; set;}
         public double sessionExpiryHours{get; set;}
         public double writeExpiryMinutes{get; set;}
-        public string apyKey {get; set;}
-        public string sendGridAPIkey{get;set;}
-        public List<List<string>> userAuth {get; set;}
         public string staticFilesPath {get; set;}
         public bool serverLog {get; set;}
-        public string recaptchaClientKey{get; set;}
-        public string recaptchaServerKey{get; set;}
         public string appStoreFileName{get; set;}
         public bool recoveryMode{get;set;}
         public string sendGridEmail {get;set;}
 
+        private EnvVars _envVars;
+
+        public EnvVars GetEnvVars(){
+            return _envVars;
+        }
+
         public bool isRecaptchaEnabled(){
-            return (recaptchaClientKey != "" && recaptchaServerKey !="");
+            return (_envVars.recaptchaClientKey != "" && _envVars.recaptchaServerKey !="");
         }
 
         public RESTconfigs(){
-            apyKey = "";
-            userAuth = new List<List<string>>(){};
             staticFilesPath = "./public/";
-            enableAPIkey = false;
             enableStaticFiles = false;
             enableCookieAuth = false;
             enableREST = true;
@@ -67,16 +63,28 @@ namespace opcRESTconnector
             sessionExpiryHours = 720;
             writeExpiryMinutes = 30;
             serverLog = true;
-            recaptchaClientKey = "";
-            recaptchaServerKey = "";
             appStoreFileName = "webserver.data.db";
             recoveryMode = false;
-            sendGridAPIkey = "";
             sendGridEmail="admin@gmail.com";
+            _envVars = new EnvVars();
         }
 
     }
     
+    public class EnvVars{
+        public string recaptchaClientKey;
+        public string recaptchaServerKey;
+        public string sendGridAPIkey;
+        public string apiKey;
+
+        public EnvVars()
+        {
+            recaptchaClientKey = Environment.GetEnvironmentVariable("OPC_WEBSERVER_RECAPTCHA_C") ?? "";
+            recaptchaServerKey = Environment.GetEnvironmentVariable("OPC_WEBSERVER_RECAPTCHA_S") ?? "";
+            sendGridAPIkey = Environment.GetEnvironmentVariable("OPC_WEBSERVER_SENDGRID") ?? "";
+            apiKey = Environment.GetEnvironmentVariable("OPC_WEBSERVER_APIKEY") ?? "";
+        }
+    }
 
 
 }

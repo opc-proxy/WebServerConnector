@@ -49,9 +49,6 @@ namespace opcRESTconnector
             // this is a bit too stringent with JSON parsing and fails also if one represent string with '' instead of ""
             //var data = await HttpContext.GetRequestDataAsync<ReadRequest>();
 
-            // validity check
-            if (_conf.enableAPIkey && data.apiKey != _conf.apyKey)
-                throw HttpException.Forbidden();
             try{
                 var values = await _service.readValueFromCache(data.names.ToArray());
                 var response = new List<ReadResponse>();
@@ -83,10 +80,6 @@ namespace opcRESTconnector
             catch(Exception){
                 throw HttpException.BadRequest();
             }
-
-            // validity check
-            if(_conf.enableAPIkey &&  data.apiKey != _conf.apyKey )  
-                throw HttpException.Forbidden();
 
             if(data.values.Count == 0 || data.names.Count != data.values.Count ) 
                 throw HttpException.BadRequest();

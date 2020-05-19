@@ -8,6 +8,7 @@ var assert = require('chai').assert;
 let port = 8087;
 Browser.localhost('localhost', port );
 const browser = new Browser();
+var  embedded_token = "";
 
 describe('No Auth? You shall not pass',()=>{
   it('Forbid GET POST /',forbid("/"));
@@ -58,9 +59,9 @@ describe('Login page', function() {
     });
 
     it('Has csrf in localstorage', ()=>{
-      let c = browser.localStorage('localhost').getItem("csrfToken");
-      assert.isNotNull(c,"Has csrf token");
-      assert.isAbove(c.length,10);
+      embedded_token = browser.localStorage('localhost').getItem("API-Token");
+      assert.isNotNull(embedded_token,"Has csrf token");
+      assert.isAbove(embedded_token.length,10);
     });
 
 });
@@ -110,7 +111,7 @@ describe('Force Password update',()=>{
     browser.fill('user', 'pino');
     await browser.pressButton('Submit');
     browser.assert.success();
-
+    embedded_token = browser.localStorage('localhost').getItem("API-Token");
   });
 })
 
@@ -119,12 +120,14 @@ describe('Write Access',()=>{
   it('Without permission Can read, not write',async ()=>{
     await browser.visit("/api/REST/MyVariable");
     browser.assert.success();
-    let resp = await postData('/api/JSON/read',{names:["MyVariable"]});
+    let resp = await postData('/api/JSON/read',{names:["MyVariable"]},embedded_token);
     assert.equal(resp.status,200,"Read JSON");
+    resp = await postData('/api/JSON/read',{names:["MyVariable"]},"wrongToken");
+    assert.equal(resp.status,403,"RED fail wrong token");
 
-    resp = await post('/api/REST/MyVariable',"value=9");
+    resp = await post('/api/REST/MyVariable',"value=9",embedded_token);
     assert.equal(resp.status,403,"POST FORM");
-    resp = await postData('/api/JSON/write',{"names":["MyVariable"], values:[8]});
+    resp = await postData('/api/JSON/write',{"names":["MyVariable"], values:[8]},embedded_token);
     assert.equal(resp.status,403,"POST JSON");
   });
 
@@ -154,17 +157,24 @@ describe('Write Access',()=>{
   });
 
   it('Can Write', async ()=>{
-    let resp = await post('/api/REST/MyVariable',"value=7");
+    embedded_token = browser.localStorage('localhost').getItem("API-Token");
+    let resp = await post('/api/REST/MyVariable',"value=7",embedded_token);
     assert.equal(resp.status,200,"POST FORM");
-    resp = await postData('/api/JSON/write',{"names":["MyVariable"], values:[8]});
+    resp = await post('/api/REST/MyVariable',"value=7","wrong token");
+    assert.equal(resp.status,403,"Wrong token REST");
+
+    resp = await postData('/api/JSON/write',{"names":["MyVariable"], values:[8]},embedded_token);
     assert.equal(resp.status,200,"POST JSON");
+    resp = await postData('/api/JSON/write',{"names":["MyVariable"], values:[8]},"wrong token");
+    assert.equal(resp.status,403,"Wrong token JSON");
+
   });
 
   it('Write Rights expire', async()=>{
     await sleep(1000);
-    let resp = await post('/api/REST/MyVariable',"value=7");
+    let resp = await post('/api/REST/MyVariable',"value=7",embedded_token);
     assert.equal(resp.status,403,"POST");
-    resp = await postData('/api/JSON/write',{"names":["MyVariable"], values:[8]});
+    resp = await postData('/api/JSON/write',{"names":["MyVariable"], values:[8]},embedded_token);
     assert.equal(resp.status,403,"POST");
   });
 
@@ -211,17 +221,22 @@ describe('Reader',()=>{
     await browser.pressButton('Submit');
     browser.assert.success();
     browser.assert.url({ pathname: '/' },"Redirected Correctly after pw change"); 
+    let new_embedded_token = browser.localStorage('localhost').getItem("API-Token");
+    assert.isNotNull(new_embedded_token,"Has csrf token");
+    assert.isAbove(new_embedded_token.length,10);
+    assert.notEqual(new_embedded_token,embedded_token,"Tokens not equal");
+    embedded_token = new_embedded_token;
   });
 
   it('Can Read, not write',async ()=>{
     await browser.visit("/api/REST/MyVariable");
     browser.assert.success();
-    let resp = await postData('/api/JSON/read',{names:["MyVariable"]});
+    let resp = await postData('/api/JSON/read',{names:["MyVariable"]},embedded_token);
     assert.equal(resp.status,200,"Read JSON");
 
-    resp = await post('/api/REST/MyVariable',"value=7");
+    resp = await post('/api/REST/MyVariable',"value=7",embedded_token);
     assert.equal(resp.status,403,"Write URL");
-    resp = await postData('/api/JSON/write',{"names":["MyVariable"], values:[8]});
+    resp = await postData('/api/JSON/write',{"names":["MyVariable"], values:[8]},embedded_token);
     assert.equal(resp.status,403,"WRITE JSON");
   });
 
@@ -280,7 +295,7 @@ function checkCSRF(){
 function forbid(location){
   return async ()=>{
     // post 
-    let res = await post(location);
+    let res = await post(location,"",embedded_token);
     assert.equal(res.status,403,"POST");
 
     try{
@@ -296,20 +311,22 @@ function forbid(location){
 }
 }
 
-async function post(location, data=""){
+async function post(location, data="",header){
   return await browser.fetch("http://localhost:"+port.toString()+location, {
        method : 'POST' ,
        headers: {
-         'Content-Type': 'application/x-www-form-urlencoded',
+        'X-API-Token': header||"",
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
       body : data  
       });
 }
 
-async function postData(location,data){
+async function postData(location,data, header){
   return await browser.fetch("http://localhost:"+port.toString()+location, {
        method : 'POST', 
        headers: {
+        'X-API-Token': header||"",
         'Content-Type': 'application/json'
        },
        body: JSON.stringify(data)

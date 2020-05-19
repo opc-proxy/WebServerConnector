@@ -1,7 +1,6 @@
 using System;
 using LiteDB;
 using System.Collections.Generic;
-using Newtonsoft.Json;
 
 namespace opcRESTconnector
 {

@@ -1,10 +1,6 @@
 using System.Threading.Tasks;
 using EmbedIO;
-using EmbedIO.Files;
 using EmbedIO.WebApi;
-using System;
-using System.Text;
-using System.IO;
 using OpcProxyCore;
 using opcRESTconnector.Session;
 using opcRESTconnector.Data;

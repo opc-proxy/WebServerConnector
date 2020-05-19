@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using EmbedIO.Routing;
 using EmbedIO.Utilities;
@@ -6,7 +5,6 @@ using EmbedIO.WebApi;
 using EmbedIO;
 using System;
 using OpcProxyCore;
-using opcRESTconnector.Session;
 using System.Net;
 using System.Net.Mail;
 

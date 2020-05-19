@@ -2,17 +2,11 @@ using System.Text;
 using System.Threading.Tasks;
 using EmbedIO;
 using System;
-using System.Net;
 using System.Security.Cryptography;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using EmbedIO.Routing;
 using EmbedIO.Utilities;
-using EmbedIO.WebApi;
 using Newtonsoft.Json.Linq;
-using opcRESTconnector.Session;
 using NLog;
-using System.Net.Http.Headers ;
 using System.Net.Http;
 
 namespace opcRESTconnector {

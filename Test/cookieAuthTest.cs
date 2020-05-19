@@ -6,7 +6,6 @@ using opcRESTconnector;
 using OpcProxyCore;
 using Newtonsoft.Json.Linq;
 using System.Diagnostics;
-using LiteDB;
 
 namespace Test
 {

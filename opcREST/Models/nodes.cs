@@ -1,7 +1,4 @@
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using Swan;
-using Swan.Cryptography;
 using System;
 using OpcProxyCore;
 using Opc.Ua;

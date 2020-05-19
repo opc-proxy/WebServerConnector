@@ -5,7 +5,6 @@ using EmbedIO;
 using System;
 using OpcProxyCore;
 using Newtonsoft.Json.Linq;
-using opcRESTconnector.Session;
 using System.Collections.Generic;
 
 namespace opcRESTconnector

@@ -56,7 +56,7 @@ namespace opcRESTconnector
             enableCookieAuth = false;
             enableREST = true;
             enableJSON = true;
-            host = "localhost";
+            host = "*";
             port = "8082";
             https = false;
             urlPrefix = "";

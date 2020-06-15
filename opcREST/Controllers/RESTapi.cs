@@ -18,7 +18,10 @@ namespace opcRESTconnector
         /// </summary>
         /// <returns></returns>
         public static Task HttpRedirect(IHttpContext ctx, string url){
-            ctx.Redirect(url,303);
+            ctx.Response.StatusCode = 303;
+            // we must have relative redirection because of embedding
+            ctx.Response.Headers.Add(HttpResponseHeader.Location, url);
+            //ctx.Redirect(url,303);
             ctx.SetHandled();
             return Task.CompletedTask;
         }

@@ -4,6 +4,7 @@ using EmbedIO.WebApi;
 using OpcProxyCore;
 using opcRESTconnector.Session;
 using opcRESTconnector.Data;
+using System;
 
 namespace opcRESTconnector {
 
@@ -39,7 +40,7 @@ namespace opcRESTconnector {
             }
             
             // API routes
-            server.WithModule(new EnsureApiCsrf(BaseRoutes.api, conf)); // token protection for api
+            if(conf.apiTokenProtection) server.WithModule(new EnsureApiCsrf(BaseRoutes.api, conf)); // token protection for api
             if(conf.enableREST) 
                 server.WithWebApi (Routes.rest, m => m.WithController<nodeRESTController> (()=>{return new nodeRESTController(manager,conf);}));
             if(conf.enableJSON)
@@ -66,6 +67,7 @@ namespace opcRESTconnector {
         }
 
         public static string buildHostURL(RESTconfigs conf){
+            if(conf.https) throw new Exception("HTTPS is unfortunately not yet supported.");
             var url =  conf.https?"https":"http" + "://" + conf.host + ":" + conf.port + "/" ;
             if(conf.urlPrefix != "") url = url + conf.urlPrefix;
             return url;

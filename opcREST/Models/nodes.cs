@@ -51,17 +51,17 @@ namespace opcRESTconnector
             }
         }
 
-        public static string buildErrorcode( uint code )
+        public static string buildErrorcode( StatusCode code )
         {
             if(StatusCode.IsGood(code)) return "";
 
-            switch(code) {
+            switch(code.Code) {
                 case (StatusCodes.BadNoEntryExists) :
                     return ErrorCodes.VarNotExist;
                 case (StatusCodes.BadTypeMismatch) :
                     return ErrorCodes.BadValue;
                 default :
-                    return ErrorCodes.Uknown;
+                    return code.ToString();
             }
         }
     }

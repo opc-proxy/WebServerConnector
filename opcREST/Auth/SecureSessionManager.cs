@@ -47,7 +47,6 @@ namespace opcRESTconnector.Session
         /// <param name="context"></param>
         /// <returns></returns>
         public override ISession Create(IHttpContext context){
-            logger.Debug("entered in create");
             var id = GetSessionId(context);
 
             SimpleSession session = new SimpleSession();
@@ -92,7 +91,7 @@ namespace opcRESTconnector.Session
         /// <param name="cookieValue"></param>
         /// <returns></returns>
         public string AuthenticateCookie(string cookieValue){
-            logger.Debug("Authenticating cookie value " + cookieValue);
+            // logger.Debug("Authenticating cookie value " + cookieValue);
             jwtPayload j = null;
             try{
                 string jwt = JWT.Decode(cookieValue,secret,JweAlgorithm.A256KW, JweEncryption.A256CBC_HS512);
@@ -100,7 +99,7 @@ namespace opcRESTconnector.Session
                 if(j.exp < DateTime.UtcNow.Ticks ) throw new Exception("token expired");
             }
             catch(Exception e) {
-                logger.Debug("Auth failed: "+ e.Message);
+                logger.Warn("Auth failed: "+ e.Message);
                 j = new jwtPayload();
             }
             return j.sub;
@@ -112,7 +111,7 @@ namespace opcRESTconnector.Session
             payload.exp = c.Expires.Ticks;
             payload.sub = c.Value;
             string token = Jose.JWT.Encode(payload.ToString(), secret, JweAlgorithm.A256KW, JweEncryption.A256CBC_HS512);
-            logger.Debug("jwt created : " + token);
+            // logger.Debug("jwt created : " + token);
             c.Value = token + "; SameSite=Strict";
             
             return c;

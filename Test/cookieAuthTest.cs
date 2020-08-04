@@ -31,6 +31,7 @@ namespace Test
                         urlPrefix : '',
                         'serverLog' : false,
                         'enableCookieAuth' : true,
+                        'apiTokenProtection' : true,
                         'writeExpiryMinutes' : 0.015,
                         'appStoreFileName':'cookifile.data',
                         'enableStaticFiles' : true,

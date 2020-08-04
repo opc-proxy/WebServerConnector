@@ -38,6 +38,7 @@ namespace Test
                         port : 8089,
                         urlPrefix : '',
                         enableStaticFiles : false,
+                        apiTokenProtection : true,
                         envVars: {
                             recaptchaClientKey : 'ciao'
                         }

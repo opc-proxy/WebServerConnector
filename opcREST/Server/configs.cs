@@ -40,6 +40,8 @@ namespace opcRESTconnector
         public bool recoveryMode{get;set;}
         public string sendGridEmail {get;set;}
 
+        public bool apiTokenProtection {get; set;}
+
         private EnvVars _envVars;
 
         public EnvVars GetEnvVars(){
@@ -67,6 +69,7 @@ namespace opcRESTconnector
             recoveryMode = false;
             sendGridEmail="admin@gmail.com";
             _envVars = new EnvVars();
+            apiTokenProtection = false;
         }
 
     }

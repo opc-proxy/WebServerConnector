@@ -49,20 +49,26 @@ namespace opcRESTconnector {
             if(context.Request.HttpVerb != HttpVerbs.Post) return Task.CompletedTask;
             
             string csrf_token = context.Request.Headers["X-API-Token"] ?? "none";
-            logger.Debug("Token " + csrf_token);
             if(_conf.enableCookieAuth)
             {
                 var session = (sessionData) context.Session?["session"];
                 if(session == null) throw HttpException.Forbidden();
-                logger.Debug("Token in session " + session.csrf_token);
                 if( session.csrf_token == csrf_token) return Task.CompletedTask;
-                else throw HttpException.Forbidden();
+                else {
+                    logger.Warn("Api Token auth failed. ");
+                    logger.Debug("token in session: " + session.csrf_token);
+                    logger.Debug("token in X-API-Token Header: " + csrf_token);
+                    throw HttpException.Forbidden();
+                }
             }
             else 
             {
                 if(_conf.GetEnvVars().apiKey == "" )        return Task.CompletedTask;;
                 if(_conf.GetEnvVars().apiKey == csrf_token) return Task.CompletedTask;
             }
+            logger.Warn("Api Token auth failed. ");
+            logger.Debug("token in Env Var: " +_conf.GetEnvVars().apiKey );
+            logger.Debug("token in X-API-Token Header: " + csrf_token);
             throw HttpException.Forbidden();
         }
     }
@@ -189,7 +195,7 @@ namespace opcRESTconnector {
         /// <param name="context"></param>
         public string setCSRFcookie(IHttpContext context){
             var token = csrf_gen.GenerateToken(salt,secret);
-            logger.Debug("Set CSRF: " + token);
+            // logger.Debug("Set CSRF: " + token);
             var cookie = new System.Net.Cookie("_csrf",token + "; SameSite=Strict");
             cookie.HttpOnly = true;
             cookie.Expires = DateTime.Now.AddMinutes(3) ;

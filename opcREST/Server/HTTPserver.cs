@@ -10,11 +10,12 @@ namespace opcRESTconnector {
 
     public class HTTPServerBuilder {
 
-
         /// <summary>
         /// 
         /// </summary>
-        //// <param name="url"></param>
+        /// <param name="conf"></param>
+        /// <param name="manager"></param>
+        /// <param name="app_store"></param>
         /// <returns></returns>
         public static WebServer CreateWebServer (RESTconfigs conf, serviceManager manager, DataStore app_store) {
             var logger = NLog.LogManager.GetLogger("WebServer");

@@ -70,10 +70,12 @@ namespace opcRESTconnector.Data
                 return _collection.Update(data);
             }
         }
+        
         /// <summary>
         /// Get the session and if exists it updates last seen
         /// </summary>
         /// <param name="s_Id"></param>
+        /// <param name="ip"></param>
         /// <returns></returns>
         public sessionData GetAndUpdateLastSeen(string s_Id, string ip){
             lock(_db){

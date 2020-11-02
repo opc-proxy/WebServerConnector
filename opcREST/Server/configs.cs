@@ -38,7 +38,7 @@ namespace opcRESTconnector
         public bool serverLog {get; set;}
         public string appStoreFileName{get; set;}
         public bool recoveryMode{get;set;}
-        public string sendGridEmail {get;set;}
+        public string MJEmail {get;set;}
 
         public bool apiTokenProtection {get; set;}
 
@@ -67,7 +67,7 @@ namespace opcRESTconnector
             serverLog = true;
             appStoreFileName = "webserver.data.db";
             recoveryMode = false;
-            sendGridEmail="admin@gmail.com";
+            MJEmail="admin@gmail.com";
             _envVars = new EnvVars();
             apiTokenProtection = false;
         }
@@ -77,14 +77,16 @@ namespace opcRESTconnector
     public class EnvVars{
         public string recaptchaClientKey;
         public string recaptchaServerKey;
-        public string sendGridAPIkey;
+        public string MJAPIPublic;
+        public string MJAPIPrivate;
         public string apiKey;
 
         public EnvVars()
         {
             recaptchaClientKey = Environment.GetEnvironmentVariable("OPC_WEBSERVER_RECAPTCHA_C") ?? "";
             recaptchaServerKey = Environment.GetEnvironmentVariable("OPC_WEBSERVER_RECAPTCHA_S") ?? "";
-            sendGridAPIkey = Environment.GetEnvironmentVariable("OPC_WEBSERVER_SENDGRID") ?? "";
+            MJAPIPublic = Environment.GetEnvironmentVariable("OPC_WEBSERVER_MJAPIKEY_PUBLIC") ?? "";
+            MJAPIPrivate = Environment.GetEnvironmentVariable("OPC_WEBSERVER_MJAPIKEY_PRIVATE") ?? "";
             apiKey = Environment.GetEnvironmentVariable("OPC_WEBSERVER_APIKEY") ?? "";
         }
     }

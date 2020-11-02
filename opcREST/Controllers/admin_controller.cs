@@ -10,6 +10,10 @@ using System.Net;
 using SendGrid;
 using SendGrid.Helpers.Mail;
 using NLog;
+using Mailjet.Client;
+using Mailjet.Client.Resources;
+using Newtonsoft.Json.Linq;
+
 
 namespace opcRESTconnector{
     public  class AdminController : WebApiController{
@@ -226,15 +230,14 @@ namespace opcRESTconnector{
         }
 
         public async Task<bool> sendMail(UserData user, string pw){
+            var apiKey_public = _conf.GetEnvVars().MJAPIPublic;
+            var apiKey_private = _conf.GetEnvVars().MJAPIPrivate;
+            if(String.IsNullOrEmpty(apiKey_private) || String.IsNullOrEmpty(apiKey_public) || String.IsNullOrEmpty(_conf.MJEmail)) return false;
+            MailjetClient client = new MailjetClient(apiKey_public,apiKey_private){Version = ApiVersion.V3_1, };
 
-            
-            var apiKey = _conf.GetEnvVars().sendGridAPIkey;
-            if(String.IsNullOrEmpty(apiKey) || String.IsNullOrEmpty(_conf.sendGridEmail)) return false;
+            var from = _conf.MJEmail ;
+            var to = user.email;
 
-            var client = new SendGridClient(apiKey);
-            var from = new EmailAddress(_conf.sendGridEmail, "Admin");
-            var subject = "New User Registered";
-            var to = new EmailAddress(user.email, user.fullName);
             var plainTextContent = $@"
                 Hello {user.fullName},
 
@@ -245,7 +248,7 @@ namespace opcRESTconnector{
                 Role                     {user.role.ToString()}
                 Valid Until              {user.activity_expiry.ToUniversalTime().ToString()}
 
-                Please login at {HTTPServerBuilder.buildHostURL(_conf)+Routes.login.Substring(1)}
+                Please login at   https://xenoscope-sc.physik.uzh.ch
 
                 Best regards,
 
@@ -263,17 +266,29 @@ namespace opcRESTconnector{
                 <tr><td>Valid Until</td>  <td><strong>{user.activity_expiry.ToUniversalTime().ToString()}</strong></td> 
                 </table>
                 <br>
-                Please login at <a href='{HTTPServerBuilder.buildHostURL(_conf)+Routes.login.Substring(1)}'> {HTTPServerBuilder.buildHostURL(_conf)+Routes.login.Substring(1)}</a>
+                Please login at <a href='https://xenoscope-sc.physik.uzh.ch'>xenoscope-sc.physik.uzh.ch</a>
                 <br>
                 <br>
                 Best regards,
                 <br>
                     Admin team.
             ";
-            var msg = MailHelper.CreateSingleEmail(from, to, subject, plainTextContent, htmlContent);
-            var response = await client.SendEmailAsync(msg);
-            logger.Info("User " + user.userName + " notification e-mail sent to " + to );
-            return response.StatusCode == HttpStatusCode.Accepted;
+
+            var payload = new JArray { new JObject {
+                 {"From", new JObject { {"Email", from}, {"Name", "Xenoscope"} }},
+                 {"To", new JArray { new JObject { {"Email", to} } }},
+                 {"Subject", "Xenoscope User Registered"},
+                 {"TextPart", plainTextContent},
+                 {"HTMLPart", htmlContent}} };
+            
+            
+            MailjetRequest request = new MailjetRequest{ Resource = Send.Resource,}.Property(Send.Messages, payload);
+            MailjetResponse response = await client.PostAsync(request);
+            if (response.IsSuccessStatusCode) {
+                logger.Info("User " + user.userName + " notification e-mail sent to " + to );
+                return true;
+            }
+            else return false;
         }
 
 

@@ -59,8 +59,7 @@ namespace Test
             Console.WriteLine("Warming up...");
             Thread.Sleep(1000);
             Console.WriteLine("API key " + rest._conf.GetEnvVars().apiKey);
-            Console.WriteLine("OPC_WEBSERVER_SENDGRID " + rest._conf.GetEnvVars().sendGridAPIkey);
-            Console.WriteLine("OPC_WEBSERVER_SENDGRID " + Environment.GetEnvironmentVariable("OPC_WEBSERVER_SENDGRID"));
+            Console.WriteLine("OPC_WEBSERVER_MJAPIPublic " + rest._conf.GetEnvVars().MJAPIPublic);
             Console.WriteLine("Start Test...");
             Assert.Equal("",rest._conf.GetEnvVars().recaptchaClientKey);
             Assert.Equal("1234567",rest._conf.GetEnvVars().apiKey);
